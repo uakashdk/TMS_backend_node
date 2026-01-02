@@ -1,0 +1,38 @@
+# Node dependencies
+node_modules
+npm-debug.log
+yarn.lock
+pnpm-lock.yaml
+
+# Environment files
+.env
+.env.*
+
+# Git & VCS
+.git
+.gitignore
+
+# Docker files (optional)
+docker-compose.yml
+Dockerfile
+
+# Logs
+logs
+*.log
+
+# OS / Editor files
+.DS_Store
+Thumbs.db
+
+# Build / coverage
+dist
+build
+coverage
+
+# IDE configs
+.vscode
+.idea
+
+# Tests (optional for prod images)
+tests
+__tests__
