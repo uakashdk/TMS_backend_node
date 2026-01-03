@@ -1,47 +1,30 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model } from 'sequelize';
 import { sequelize } from "../../Config/Db.js";
 
-class Company extends Model {}
+class StateMaster extends Model {}
 
-Company.init(
+StateMaster.init(
   {
     id: {
       type: DataTypes.INTEGER,
       primaryKey: true,
       autoIncrement: true,
     },
-
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-
-    address: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-    company_code: {
+    state_name: {
       type: DataTypes.STRING,
       allowNull: false,
       unique: true,
     },
-
-    company_email: {
+    state_code: {
+      type: DataTypes.STRING(2), // e.g., IN state code
+      allowNull: false,
+      unique: true,
+    },
+    country_name: {
       type: DataTypes.STRING,
       allowNull: false,
+      defaultValue: 'India',
     },
-
-    contact_person: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-    document_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
-
     status: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -50,11 +33,11 @@ Company.init(
   },
   {
     sequelize,
-    modelName: "Company",
-    tableName: "companies",
+    modelName: 'StateMaster',
+    tableName: 'state_master',
     timestamps: true,
     underscored: true,
   }
 );
 
-export default Company;
+export default StateMaster;

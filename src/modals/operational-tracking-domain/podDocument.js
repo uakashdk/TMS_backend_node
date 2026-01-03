@@ -1,9 +1,9 @@
-import { DataTypes, Model } from "sequelize";
+import { DataTypes, Model } from 'sequelize';
 import { sequelize } from "../../Config/Db.js";
 
-class Company extends Model {}
+class PODDocument extends Model {}
 
-Company.init(
+PODDocument.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -11,50 +11,40 @@ Company.init(
       autoIncrement: true,
     },
 
-    name: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-
-    address: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-    company_code: {
-      type: DataTypes.STRING,
-      allowNull: false,
-      unique: true,
-    },
-
-    company_email: {
-      type: DataTypes.STRING,
-      allowNull: false,
-    },
-
-    contact_person: {
-      type: DataTypes.STRING,
-      allowNull: true,
-    },
-
-    document_id: {
+    pod_id: {
       type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'pods', key: 'id' },
+    },
+
+    file_url: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    file_type: {
+      type: DataTypes.STRING,
+      allowNull: false,
+    },
+
+    description: {
+      type: DataTypes.STRING,
       allowNull: true,
     },
 
-    status: {
-      type: DataTypes.BOOLEAN,
+    uploaded_by: {
+      type: DataTypes.INTEGER,
       allowNull: false,
-      defaultValue: true,
+      references: { model: 'admins', key: 'id' },
     },
   },
   {
     sequelize,
-    modelName: "Company",
-    tableName: "companies",
+    modelName: 'PODDocument',
+    tableName: 'pod_documents',
     timestamps: true,
     underscored: true,
   }
 );
 
-export default Company;
+export default PODDocument;

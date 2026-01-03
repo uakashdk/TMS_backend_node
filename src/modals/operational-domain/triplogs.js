@@ -1,5 +1,5 @@
 import { DataTypes } from 'sequelize';
-import sequelize from '../../Config/Db.js';
+import { sequelize } from "../../Config/Db.js";
 
 const TripLog = sequelize.define(
   'TripLog',

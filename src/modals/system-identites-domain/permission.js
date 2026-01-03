@@ -29,3 +29,5 @@ Permission.init(
     timestamps: false,
   }
 );
+
+export default Permission;

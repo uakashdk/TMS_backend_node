@@ -1,20 +1,24 @@
 import express from 'express';
 import dotenv from 'dotenv';
-
 dotenv.config();
+
+import { connectDB, sequelize } from './Config/Db.js';
+import './modals/association.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-import { connectDB } from './Config/Db.js';
 
 app.use(express.json());
-// Connect to the database
-connectDB();
-// Define a simple route
-app.get('/', (req, res) => {
-  res.send('Transport Management System API is running');
-}); 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`🚀 Server is running on port ${PORT}`);
-});
+
+const startServer = async () => {
+  await connectDB();
+
+  await sequelize.sync({ alter: true });
+  console.log('✅ Tables created successfully');
+
+  app.listen(PORT, () => {
+    console.log(`🚀 Server running on port ${PORT}`);
+  });
+};
+
+startServer();
