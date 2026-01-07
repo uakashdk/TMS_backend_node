@@ -1,0 +1,139 @@
+1️⃣ SYSTEM-IDENTITIES DOMAIN
+Table	PK	FKs	Description
+Admins	id	role_id, company_id	System users with roles
+Roles	id	—	Admin roles (super_admin, etc.)
+Permissions	id	—	Action-level permissions
+RolePermissions	id	role_id, permission_id	Many-to-many mapping
+Document	id	created_by (Admins)	Documents uploaded by admins
+Companies	id	—	Client/Company info
+
+Associations:
+
+Admins ↔ Roles → many admins belong to one role
+
+Admins ↔ Companies → many admins per company
+
+Roles ↔ Permissions → many-to-many via RolePermissions
+
+Document ↔ Admins → documents created by admin
+
+2️⃣ OPERATIONAL DOMAIN
+Table	PK	FKs	Description
+Party	id	company_id	Customers/clients
+PartyAddress	id	party_id	Addresses of Party
+PartyGst	id	party_id, company_id	GST details
+RateContact	id	party_id	Rates/contracts per party
+Jobs	id	company_id, customer_id, created_by_admin_id	Operational Jobs
+Vehicles	id	company_id	Fleet vehicles
+Drivers	id	company_id	Drivers
+Route	id	company_id	Route master
+StateMaster	id	—	States list
+CityMaster	id	state_id	Cities per state
+
+Associations:
+
+Jobs ↔ Companies → many jobs per company
+
+Jobs ↔ Party → many jobs per party
+
+Jobs ↔ Admins → creator
+
+Vehicles ↔ Companies → many vehicles per company
+
+Drivers ↔ Companies → many drivers per company
+
+Route ↔ Companies → many routes per company
+
+City ↔ State → many cities per state
+
+3️⃣ OPERATIONAL TRACKING DOMAIN
+Table	PK	FKs	Description
+Trips	id	job_id, route_id	Each job may have many trips
+TripDriverMapping	id	trip_id, driver_id	Drivers assigned to trips
+TripLogs	id	trip_id	Status/log of trip events
+TripExpenses	id	trip_id	Trip-specific expenses
+POD	id	trip_id	Proof of delivery
+PODDocument	id	pod_id	Documents attached to POD
+TripStatus	id	—	Status master (Pending, In Transit, Delivered)
+
+Associations:
+
+Trips ↔ Jobs → many trips per job
+
+Trips ↔ Route → trip belongs to a route
+
+TripDriverMapping ↔ Trips & Drivers → many-to-many
+
+TripLogs ↔ Trips → many logs per trip
+
+TripExpenses ↔ Trips → many expenses per trip
+
+POD ↔ Trips → many PODs per trip
+
+PODDocument ↔ POD → many docs per POD
+
+Trip ↔ TripStatus → one trip has one current status (optional FK)
+
+4️⃣ FINANCE DOMAIN
+Table	PK	FKs	Description
+GrMaster	id	trip_id	Goods receipt linked to trips
+TbillMaster	id	gr_id	Bill linked to GR
+Invoices	id	bill_id	Invoice linked to Bill
+InvoiceCharge	id	invoice_id, charge_master_id, gst_id, hsn_id	Invoice line items
+Payment	id	invoice_id	Payment per invoice
+OtherChargesMaster	id	—	List of charges
+GstMaster	id	—	GST master data
+HsnMaster	id	—	HSN codes
+
+Associations:
+
+GR ↔ Trips → many GRs per trip
+
+Bill ↔ GR → many bills per GR
+
+Invoice ↔ Bill → many invoices per bill
+
+InvoiceCharge ↔ Invoice → many charges per invoice
+
+InvoiceCharge ↔ OtherChargesMaster/Gst/Hsn → mapping of taxes & charges
+
+Payment ↔ Invoice → many payments per invoice
+
+✅ Observations
+
+You have all essential tables for a startup TMS.
+
+Associations are correct for now.
+
+You don’t need more tables immediately. Later modules can be added:
+
+Employee salary & attendance
+
+Vehicle maintenance (battery, tyre, service)
+
+Analytics & reports
+
+Discounts / special pricing
+
+Visual Diagram Flow (Text Version)
+Party → PartyAddress / PartyGst / RateContact
+   |
+   v
+Jobs → Trips → TripDriverMapping
+       |       |
+       |       v
+       |     Drivers
+       v
+     TripLogs / TripExpenses / POD → PODDocument
+       |
+       v
+     GrMaster → TbillMaster → Invoices → InvoiceCharge → Payment
+
+
+Arrows (→) show 1 to many relationships.
+
+Multi-level financial flow is normalized.
+
+If you want, I can draw an actual diagram image for you with boxes & arrows, which you can use in documentation or planning.
+
+Do you want me to create that image?

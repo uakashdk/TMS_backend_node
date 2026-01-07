@@ -1,7 +1,10 @@
 // associations.js
 import {
   Admins,
-  Customers,
+  Party,
+  PartyAddress,
+  PartyGst,
+  RateContact,
   Companies,
   Permissions,
   Roles,
@@ -27,162 +30,191 @@ import {
   InvoiceCharge,
   Payment,
   TbillMaster
-} from './index.js';
+} from "./index.js";
 
-/** =======================
- *  SYSTEM-IDENTITY DOMAIN
- * ======================= */
+/* ===========================
+   SYSTEM-IDENTITY DOMAIN
+=========================== */
 
 // Admins ↔ Roles
-Admins.belongsTo(Roles, { foreignKey: 'role_id', as: 'role' });
-Roles.hasMany(Admins, { foreignKey: 'role_id', as: 'admins' });
+Admins.belongsTo(Roles, { foreignKey: "role_id", as: "role" });
+Roles.hasMany(Admins, { foreignKey: "role_id", as: "admins" });
 
 // Admins ↔ Companies
-Admins.belongsTo(Companies, { foreignKey: 'company_id', as: 'company' });
-Companies.hasMany(Admins, { foreignKey: 'company_id', as: 'admins' });
+Admins.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
+Companies.hasMany(Admins, { foreignKey: "company_id", as: "admins" });
 
-// Roles ↔ Permissions (many-to-many via RolePermissions)
+// Roles ↔ Permissions
 Roles.belongsToMany(Permissions, {
   through: RolePermissions,
-  foreignKey: 'role_id',
-  otherKey: 'permission_id',
-  as: 'permissions'
+  foreignKey: "role_id",
+  otherKey: "permission_id",
+  as: "permissions",
 });
 Permissions.belongsToMany(Roles, {
   through: RolePermissions,
-  foreignKey: 'permission_id',
-  otherKey: 'role_id',
-  as: 'roles'
+  foreignKey: "permission_id",
+  otherKey: "role_id",
+  as: "roles",
 });
 
 // Document ↔ Admins
-Document.belongsTo(Admins, { foreignKey: 'created_by', as: 'creator' });
-Admins.hasMany(Document, { foreignKey: 'created_by', as: 'documents' });
+Document.belongsTo(Admins, { foreignKey: "created_by", as: "creator" });
+Admins.hasMany(Document, { foreignKey: "created_by", as: "documents" });
 
-/** =======================
- *  OPERATIONAL DOMAIN
- * ======================= */
+/* ===========================
+   PARTY DOMAIN (NEW – FIXED)
+=========================== */
+
+// Party ↔ PartyAddress
+Party.hasMany(PartyAddress, { foreignKey: "party_id", as: "addresses" });
+PartyAddress.belongsTo(Party, { foreignKey: "party_id", as: "party" });
+
+// Party ↔ PartyGst
+Party.hasMany(PartyGst, { foreignKey: "party_id", as: "gsts" });
+PartyGst.belongsTo(Party, { foreignKey: "party_id", as: "party" });
+
+// Party ↔ RateContact
+Party.hasMany(RateContact, { foreignKey: "party_id", as: "contacts" });
+RateContact.belongsTo(Party, { foreignKey: "party_id", as: "party" });
+
+/* ===========================
+   OPERATIONAL DOMAIN
+=========================== */
 
 // Companies ↔ Jobs
-Jobs.belongsTo(Companies, { foreignKey: 'company_id', as: 'company' });
-Companies.hasMany(Jobs, { foreignKey: 'company_id', as: 'jobs' });
+Jobs.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
+Companies.hasMany(Jobs, { foreignKey: "company_id", as: "jobs" });
 
-// Customers ↔ Jobs
-Jobs.belongsTo(Customers, { foreignKey: 'customer_id', as: 'customer' });
-Customers.hasMany(Jobs, { foreignKey: 'customer_id', as: 'jobs' });
+// Party ↔ Jobs (Customer)
+Jobs.belongsTo(Party, { foreignKey: "customer_id", as: "customer" });
+Party.hasMany(Jobs, { foreignKey: "customer_id", as: "jobs" });
 
-// Admins ↔ Jobs (creator)
-Jobs.belongsTo(Admins, { foreignKey: 'created_by_admin_id', as: 'creator' });
-Admins.hasMany(Jobs, { foreignKey: 'created_by_admin_id', as: 'created_jobs' });
+// Admins ↔ Jobs
+Jobs.belongsTo(Admins, {
+  foreignKey: "created_by_admin_id",
+  as: "creator",
+});
+Admins.hasMany(Jobs, {
+  foreignKey: "created_by_admin_id",
+  as: "created_jobs",
+});
 
-
-// StateMaster ↔ CityMaster
-CityMaster.belongsTo(StateMaster, { foreignKey: 'state_id', as: 'state' });
-StateMaster.hasMany(CityMaster, { foreignKey: 'state_id', as: 'cities' });
+// State ↔ City
+CityMaster.belongsTo(StateMaster, { foreignKey: "state_id", as: "state" });
+StateMaster.hasMany(CityMaster, {
+  foreignKey: "state_id",
+  as: "cities",
+});
 
 // Routes ↔ Companies
-Route.belongsTo(Companies, { foreignKey: 'company_id', as: 'company' });
-Companies.hasMany(Route, { foreignKey: 'company_id', as: 'routes' });
+Route.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
+Companies.hasMany(Route, { foreignKey: "company_id", as: "routes" });
 
 // Vehicles ↔ Companies
-Vehicles.belongsTo(Companies, { foreignKey: 'company_id', as: 'company' });
-Companies.hasMany(Vehicles, { foreignKey: 'company_id', as: 'vehicles' });
+Vehicles.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
+Companies.hasMany(Vehicles, { foreignKey: "company_id", as: "vehicles" });
 
 // Drivers ↔ Companies
-Drivers.belongsTo(Companies, { foreignKey: 'company_id', as: 'company' });
-Companies.hasMany(Drivers, { foreignKey: 'company_id', as: 'drivers' });
+Drivers.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
+Companies.hasMany(Drivers, { foreignKey: "company_id", as: "drivers" });
 
-/** =======================
- *  OPERATIONAL TRACKING DOMAIN
- * ======================= */
+/* ===========================
+   OPERATIONAL TRACKING
+=========================== */
 
 // Trips ↔ Jobs
-Trips.belongsTo(Jobs, { foreignKey: 'job_id', as: 'job' });
-Jobs.hasMany(Trips, { foreignKey: 'job_id', as: 'trips' });
+Trips.belongsTo(Jobs, { foreignKey: "job_id", as: "job" });
+Jobs.hasMany(Trips, { foreignKey: "job_id", as: "trips" });
 
 // Trips ↔ Routes
-Trips.belongsTo(Route, { foreignKey: 'route_id', as: 'route' });
-Route.hasMany(Trips, { foreignKey: 'route_id', as: 'trips' });
+Trips.belongsTo(Route, { foreignKey: "route_id", as: "route" });
+Route.hasMany(Trips, { foreignKey: "route_id", as: "trips" });
 
-// TripDriverMapping ↔ Trips & Drivers
-TripDriverMapping.belongsTo(Trips, { foreignKey: 'trip_id', as: 'trip' });
-Trips.hasMany(TripDriverMapping, { foreignKey: 'trip_id', as: 'driver_assignments' });
+// Trip ↔ Driver (mapping)
+TripDriverMapping.belongsTo(Trips, {
+  foreignKey: "trip_id",
+  as: "trip",
+});
+Trips.hasMany(TripDriverMapping, {
+  foreignKey: "trip_id",
+  as: "driver_assignments",
+});
 
-TripDriverMapping.belongsTo(Drivers, { foreignKey: 'driver_id', as: 'driver' });
-Drivers.hasMany(TripDriverMapping, { foreignKey: 'driver_id', as: 'trip_assignments' });
+TripDriverMapping.belongsTo(Drivers, {
+  foreignKey: "driver_id",
+  as: "driver",
+});
+Drivers.hasMany(TripDriverMapping, {
+  foreignKey: "driver_id",
+  as: "trip_assignments",
+});
 
+// Trip ↔ Logs
+TripLogs.belongsTo(Trips, { foreignKey: "trip_id", as: "trip" });
+Trips.hasMany(TripLogs, { foreignKey: "trip_id", as: "logs" });
 
-// TripLogs ↔ Trips
-TripLogs.belongsTo(Trips, { foreignKey: 'trip_id', as: 'trip' });
-Trips.hasMany(TripLogs, { foreignKey: 'trip_id', as: 'logs' });
+// Trip ↔ Expenses
+TripExpenses.belongsTo(Trips, { foreignKey: "trip_id", as: "trip" });
+Trips.hasMany(TripExpenses, {
+  foreignKey: "trip_id",
+  as: "expenses",
+});
 
-// TripExpenses ↔ Trips
-TripExpenses.belongsTo(Trips, { foreignKey: 'trip_id', as: 'trip' });
-Trips.hasMany(TripExpenses, { foreignKey: 'trip_id', as: 'expenses' });
+// Trip ↔ POD
+POD.belongsTo(Trips, { foreignKey: "trip_id", as: "trip" });
+Trips.hasMany(POD, { foreignKey: "trip_id", as: "pods" });
 
-// POD ↔ Trips
-POD.belongsTo(Trips, { foreignKey: 'trip_id', as: 'trip' });
-Trips.hasMany(POD, { foreignKey: 'trip_id', as: 'pods' });
+// POD ↔ PODDocument
+PODDocument.belongsTo(POD, { foreignKey: "pod_id", as: "pod" });
+POD.hasMany(PODDocument, {
+  foreignKey: "pod_id",
+  as: "documents",
+});
 
-// PODDocument ↔ POD
-PODDocument.belongsTo(POD, { foreignKey: 'pod_id', as: 'pod' });
-POD.hasMany(PODDocument, { foreignKey: 'pod_id', as: 'documents' });
+/* ===========================
+   FINANCE DOMAIN (FIXED)
+=========================== */
 
-/** =======================
- *  FINANCE DOMAIN
- * ======================= */
+// Trip ↔ GR (ONE TO ONE)
+Trips.hasOne(GrMaster, { foreignKey: "trip_id", as: "gr" });
+GrMaster.belongsTo(Trips, { foreignKey: "trip_id", as: "trip" });
 
-// GR ↔ Trips
-GrMaster.belongsTo(Trips, { foreignKey: 'trip_id', as: 'trip' });
-Trips.hasMany(GrMaster, { foreignKey: 'trip_id', as: 'grs' });
+// GR ↔ Bills (ONE TO MANY)
+GrMaster.hasMany(TbillMaster, { foreignKey: "gr_id", as: "bills" });
+TbillMaster.belongsTo(GrMaster, { foreignKey: "gr_id", as: "gr" });
 
-// Bills ↔ GR
-TbillMaster.belongsTo(GrMaster, { foreignKey: 'gr_id', as: 'gr' });
-GrMaster.hasMany(TbillMaster, { foreignKey: 'gr_id', as: 'bills' });
+// Invoice ↔ Bills (ONE INVOICE → MANY BILLS)
+Invoices.hasMany(TbillMaster, {
+  foreignKey: "invoice_id",
+  as: "bills",
+});
+TbillMaster.belongsTo(Invoices, {
+  foreignKey: "invoice_id",
+  as: "invoice",
+});
 
-// Invoice ↔ Bill
-Invoices.belongsTo(TbillMaster, { foreignKey: 'bill_id', as: 'bill' });
-TbillMaster.hasMany(Invoices, { foreignKey: 'bill_id', as: 'invoices' });
+// Invoice ↔ Charges
+Invoices.hasMany(InvoiceCharge, {
+  foreignKey: "invoice_id",
+  as: "charges",
+});
+InvoiceCharge.belongsTo(Invoices, {
+  foreignKey: "invoice_id",
+  as: "invoice",
+});
 
-// InvoiceCharges ↔ Invoice
-InvoiceCharge.belongsTo(Invoices, { foreignKey: 'invoice_id', as: 'invoice' });
-Invoices.hasMany(InvoiceCharge, { foreignKey: 'invoice_id', as: 'charges' });
+// InvoiceCharge ↔ Masters
+InvoiceCharge.belongsTo(OtherChargesMaster, {
+  foreignKey: "charge_master_id",
+  as: "charge_master",
+});
+InvoiceCharge.belongsTo(GstMaster, { foreignKey: "gst_id", as: "gst" });
+InvoiceCharge.belongsTo(HsnMaster, { foreignKey: "hsn_id", as: "hsn" });
 
-// InvoiceCharges ↔ OtherChargesMaster / GST / HSN
-InvoiceCharge.belongsTo(OtherChargesMaster, { foreignKey: 'charge_master_id', as: 'charge_master' });
-InvoiceCharge.belongsTo(GstMaster, { foreignKey: 'gst_id', as: 'gst' });
-InvoiceCharge.belongsTo(HsnMaster, { foreignKey: 'hsn_id', as: 'hsn' });
-
-// Payments ↔ Invoice
-Payment.belongsTo(Invoices, { foreignKey: 'invoice_id', as: 'invoice' });
-Invoices.hasMany(Payment, { foreignKey: 'invoice_id', as: 'payments' });
-
-export default {
-  Admins,
-  Customers,
-  Companies,
-  Permissions,
-  Roles,
-  RolePermissions,
-  Document,
-  Jobs,
-  StateMaster,
-  CityMaster,
-  Vehicles,
-  Drivers,
-  Trips,
-  TripDriverMapping,
-  TripLogs,
-  TripExpenses,
-  Route,
-  POD,
-  PODDocument,
-  GrMaster,
-  GstMaster,
-  HsnMaster,
-  OtherChargesMaster,
-  Invoices,
-  InvoiceCharge,
-  Payment,
-  TbillMaster
-};
+// Invoice ↔ Payments
+Invoices.hasMany(Payment, { foreignKey: "invoice_id", as: "payments" });
+Payment.belongsTo(Invoices, {
+  foreignKey: "invoice_id",
+  as: "invoice",
+});

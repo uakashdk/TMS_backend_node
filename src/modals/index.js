@@ -1,6 +1,5 @@
 // system-identities-domain
 import Admins from "./system-identites-domain/admin.js";
-import Customers from "./system-identites-domain/coustomer.js";
 import Companies from "./system-identites-domain/companies.js";
 import Permissions from "./system-identites-domain/permission.js";
 import Roles from "./system-identites-domain/roles.js";
@@ -14,7 +13,7 @@ import Jobs from "./operational-domain/jobs.js";
 import StateMaster from "./operational-domain/stateMaster.js";
 import CityMaster from "./operational-domain/cityMaster.js";
 import Route from "./operational-domain/route.js";
-import Trips from "./operational-domain/trip.js";  // pick only one Trip model
+import Trips from "./operational-domain/trip.js";
 
 // operational-tracking-domain
 import TripLogs from "./operational-domain/triplogs.js";
@@ -23,6 +22,12 @@ import TripDriverMapping from "./operational-domain/tripDriverMapping.js";
 import POD from "./operational-tracking-domain/POD.js";
 import PODDocument from "./operational-tracking-domain/podDocument.js";
 import TripStatus from "./operational-tracking-domain/tripStatus.js";
+
+// party
+import Party from "./operational-domain/party.js";
+import PartyAddress from "./operational-domain/PartyAddress.js";
+import PartyGst from "./operational-domain/PartyGst.js";
+import RateContact from "./operational-domain/RateContact.js";
 
 // finance-domain
 import GrMaster from "./finance-domain/gr_master.js";
@@ -34,9 +39,13 @@ import InvoiceCharge from "./finance-domain/InvoiceCharge.js";
 import Payment from "./finance-domain/payment.js";
 import TbillMaster from "./finance-domain/tBill_master.js";
 
+/* 🔥 THIS IS THE MISSING LINE 🔥 */
+import "./association.js";
+
+/* ✅ SINGLE EXPORT POINT */
 export {
   Admins,
-  Customers,
+  Party,
   Companies,
   Permissions,
   Roles,
@@ -55,6 +64,11 @@ export {
   POD,
   PODDocument,
   TripStatus,
+
+  PartyAddress,
+  PartyGst,
+  RateContact,
+
   GrMaster,
   GstMaster,
   HsnMaster,
@@ -62,5 +76,5 @@ export {
   Invoices,
   InvoiceCharge,
   Payment,
-  TbillMaster,
+  TbillMaster
 };
