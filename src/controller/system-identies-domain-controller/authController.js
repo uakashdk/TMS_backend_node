@@ -21,6 +21,7 @@ export const loginAdmin = async (req, res) => {
         a.email,
         a.password,
         a.role_id,
+        a.company_id,
         r.name AS role
       FROM admins a
       JOIN roles r ON r.id = a.role_id
@@ -55,8 +56,8 @@ export const loginAdmin = async (req, res) => {
     const accessToken = jwt.sign(
       {
         userId: admin.id,
-        role: admin.role,
-        permissions: permissionList,
+        roleId: admin.role_id,
+        companyId: admin.company_id || null, // super_admin → null
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" }
@@ -73,7 +74,7 @@ export const loginAdmin = async (req, res) => {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
     return res.status(200).json({
-      success:true,
+      success: true,
       message: "Login successful",
       accessToken,
       user: {
@@ -82,6 +83,7 @@ export const loginAdmin = async (req, res) => {
         email: admin.email,
         role: admin.role,
         permissions: permissionList,
+        companyId: admin.company_id,
       },
     });
 
@@ -164,8 +166,8 @@ export const refreshAccessToken = async (req, res) => {
     const newAccessToken = jwt.sign(
       {
         userId: admin.id,
-        role: admin.role,
-        permissions: permissionList,
+        roleId: admin.role_id,
+        companyId: admin.company_id || null,
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" }
