@@ -1,9 +1,12 @@
 import express from "express";
-import { createCompany,getAllCompanies } from "../../controller/system-identies-domain-controller/company-module/companyController.js";
+import { createCompany,getAllCompanies,verifyCompanyDocument } from "../../controller/system-identies-domain-controller/company-module/companyController.js";
 import verifyAccessToken from "../../middleware/AuthMiddleware.js";
 import requireSuperAdmin from "../../middleware/requireSuperAdmin.js";
 import {createCompanySchema} from "../../validation/system-identites-domain-validation/companiesValidation.js"
-import validateRequest from "../../middleware/validationRequest.js"
+import validateRequest from "../../middleware/validationRequest.js";
+
+
+
 const router = express.Router();
 
 router.post(
@@ -16,6 +19,12 @@ router.post(
 
 
  router.get("/get-all-companies",verifyAccessToken,requireSuperAdmin,getAllCompanies);
+
+ router.patch(
+  "/:companyId/documents/:documentId/verify",
+  verifyAccessToken,
+  verifyCompanyDocument
+);
 
 
 export default router;

@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../Config/Db.js";
 
-class Document extends Model {}
+class Document extends Model { }
 
 Document.init(
   {
@@ -51,11 +51,17 @@ Document.init(
       allowNull: true, // important
     },
 
+    // status: {
+    //   type: DataTypes.BOOLEAN,
+    //   allowNull: false,
+    //   defaultValue: true,
+    // },
     status: {
-      type: DataTypes.BOOLEAN,
+      type: DataTypes.STRING,
       allowNull: false,
-      defaultValue: true,
+      defaultValue: "PENDING",
     },
+
 
     verified_by: {
       type: DataTypes.INTEGER,

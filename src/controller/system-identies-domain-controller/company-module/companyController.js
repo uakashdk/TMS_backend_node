@@ -1,5 +1,6 @@
 import {Companies} from "../../../modals/index.js";
 import { Op } from "sequelize";
+import {Document} from "../../../modals/index.js";
 
 export const createCompany = async (req, res) => {
   try {
@@ -110,6 +111,68 @@ export const getAllCompanies = async (req, res) => {
   } catch (error) {
     console.error("Get All Companies Error:", error);
 
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
+export const verifyCompanyDocument = async (req, res) => {
+  try {
+    const { companyId, documentId } = req.params;
+
+    // 🔒 Only SUPER_ADMIN
+    // if (req.user.role !== "SUPER_ADMIN") {
+    //   return res.status(403).json({
+    //     success: false,
+    //     message: "Access denied",
+    //   });
+    // }
+
+    const document = await Document.findOne({
+      where: {
+        id: documentId,
+        entity_type: "COMPANY",
+        entity_id: companyId,
+      },
+    });
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    if (document.status === "VERIFIED") {
+      return res.status(400).json({
+        success: false,
+        message: "Document already verified",
+      });
+    }
+
+    // ✅ Verify document
+    await document.update({
+      status: "VERIFIED",
+      verified_by: req.user.id,
+      verified_at: new Date(),
+    });
+
+    // 🔗 Attach verified document to company
+    await Company.update(
+      { document_id: document.id },
+      { where: { id: companyId } }
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Document verified successfully",
+      data: document,
+    });
+  } catch (error) {
+    console.error("Verify Document Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",

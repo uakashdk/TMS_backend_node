@@ -1,7 +1,8 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import authRoutes from './routes/system-identites-domain-routes/authRoutes.js';
-import companiesRoutes from "./routes/system-identites-domain-routes/companiesRoutes.js"
+import companiesRoutes from "./routes/system-identites-domain-routes/companiesRoutes.js";
+import DocumentRoutes from "./routes/system-identites-domain-routes/documentRoutes.js";
 import cookieParser from 'cookie-parser';
 import cors from "cors"
 dotenv.config();
@@ -26,6 +27,7 @@ app.use(cookieParser());
 app.use(express.json());
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/fleetlio/companies',companiesRoutes);
+app.use('/api/v1/fleetlio/document',DocumentRoutes)
 
 const startServer = async () => {
   try {
