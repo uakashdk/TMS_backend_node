@@ -10,9 +10,7 @@ export const loginAdmin = async (req, res) => {
   try {
     const { email, password } = req.body;
     if (!email || !password) {
-      return res.status(400).json({
-        message: "Email and password are required",
-      });
+      return res.status(400).json({ message: "Email and password are required" });
     }
     const admins = await sequelize.query(
       `SELECT 
@@ -53,15 +51,20 @@ export const loginAdmin = async (req, res) => {
     );
 
     const permissionList = permissions.map(p => p.name);
+
+    // ✅ ACCESS TOKEN
     const accessToken = jwt.sign(
       {
         userId: admin.id,
         roleId: admin.role_id,
-        companyId: admin.company_id || null, // super_admin → null
+        companyId: admin.company_id || null,
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" }
     );
+
+
+    // ✅ REFRESH TOKEN
     const refreshToken = jwt.sign(
       { userId: admin.id },
       process.env.REFRESH_TOKEN_SECRET,
@@ -69,9 +72,9 @@ export const loginAdmin = async (req, res) => {
     );
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+      secure: false,        // true in production (HTTPS)
+      sameSite: "lax",      // 🔥 FIXED (NOT strict)
+      maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({
       success: true,
@@ -89,11 +92,10 @@ export const loginAdmin = async (req, res) => {
 
   } catch (error) {
     console.error("Login Error:", error);
-    return res.status(500).json({
-      message: "Internal server error",
-    });
+    return res.status(500).json({ message: "Internal server error" });
   }
 };
+
 
 
 export const logoutAdmin = async (req, res) => {
@@ -120,10 +122,10 @@ export const refreshAccessToken = async (req, res) => {
     const refreshToken = req.cookies?.refreshToken;
 
     if (!refreshToken) {
-      return res.status(401).json({
-        message: "Refresh token missing",
-      });
+      return res.status(401).json({ message: "Refresh token missing" });
     }
+
+    // ✅ VERIFY REFRESH TOKEN
     const decoded = jwt.verify(
       refreshToken,
       process.env.REFRESH_TOKEN_SECRET
@@ -134,23 +136,23 @@ export const refreshAccessToken = async (req, res) => {
         a.username,
         a.email,
         a.role_id,
+        a.company_id,
         r.name AS role
       FROM admins a
       JOIN roles r ON r.id = a.role_id
       WHERE a.id = ?`,
       {
-        replacements: [decoded.userId],
+        replacements: [decoded.userId], // ✅ MATCH PAYLOAD
         type: QueryTypes.SELECT,
       }
     );
 
     if (!admins.length) {
-      return res.status(401).json({
-        message: "User not found",
-      });
+      return res.status(401).json({ message: "User not found" });
     }
 
     const admin = admins[0];
+
     const permissions = await sequelize.query(
       `SELECT p.name
        FROM role_permission_mappings pm
@@ -163,6 +165,8 @@ export const refreshAccessToken = async (req, res) => {
     );
 
     const permissionList = permissions.map(p => p.name);
+
+    // ✅ NEW ACCESS TOKEN
     const newAccessToken = jwt.sign(
       {
         userId: admin.id,
@@ -184,9 +188,8 @@ export const refreshAccessToken = async (req, res) => {
     });
 
   } catch (error) {
-    return res.status(401).json({
-      message: "Invalid or expired refresh token",
-    });
+    console.error("Refresh token error:", error.message);
+    return res.status(401).json({ message: "Invalid or expired refresh token" });
   }
 };
 

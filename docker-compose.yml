@@ -1,5 +1,3 @@
-version: "3.9"
-
 services:
   mysql:
     image: mysql:8.0
@@ -29,16 +27,15 @@ services:
     depends_on:
       mysql:
         condition: service_healthy
-
     env_file:
       - .env.production
-
     ports:
       - "5000:5000"
-
-    # ✅ NO nodemon
-    # ✅ NO project volume mount
-    command: node src/server.js
+    volumes:
+      - .:/app                # 🔥 MOUNT SOURCE CODE
+      - /app/node_modules     # 🔥 PREVENT OVERRIDE
+      - ./uploads:/app/uploads
+    command: npm run dev
 
 volumes:
   mysql_data:

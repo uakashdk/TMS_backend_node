@@ -9,6 +9,14 @@ dotenv.config();
 
 import { connectDB, sequelize } from './Config/Db.js';
 
+import path from "path";
+import { fileURLToPath } from "url";
+
+// Required for ES Modules
+
+
+// ✅ Serve uploads folder
+
 // ✅ Import models & associations
 import './modals/association.js'; // associations registers relationships
 
@@ -25,9 +33,17 @@ app.use(
 
 app.use(cookieParser());
 app.use(express.json());
-app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/fleetlio/auth', authRoutes);
 app.use('/api/v1/fleetlio/companies',companiesRoutes);
-app.use('/api/v1/fleetlio/document',DocumentRoutes)
+app.use('/api/v1/fleetlio/document',DocumentRoutes);
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+app.use(
+  "/uploads",
+  express.static(path.join(__dirname, "../uploads"))
+);
 
 const startServer = async () => {
   try {

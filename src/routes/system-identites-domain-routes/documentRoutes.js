@@ -2,9 +2,10 @@ import express from "express";
 import verifyAccessToken from "../../middleware/AuthMiddleware.js";
 import requireRole from "../../middleware/requireRole.js";
 import { ROLES } from "../../constant/roles.js";
-import { uploadDocument,verifyDocument } from "../../controller/system-identies-domain-controller/documentController.js";
+import { uploadDocument,verifyDocument,documentStatusVerification } from "../../controller/system-identies-domain-controller/documentController.js";
 import upload from "../../middleware/uploadMiddleware.js"; // multer config
 import multerErrorHandler from "../../middleware/multerErrorHandler.js";
+import requireSuperAdmin from "../../middleware/requireSuperAdmin.js";
 const router = express.Router();
 router.post(
   "/upload",
@@ -21,6 +22,8 @@ router.patch(
   requireRole([ROLES.SUPER_ADMIN]),
   verifyDocument
 );
+
+router.post("/documentStatus/:documentId",verifyAccessToken,requireSuperAdmin,documentStatusVerification)
 
 
 export default router;

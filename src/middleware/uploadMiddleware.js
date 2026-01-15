@@ -2,9 +2,12 @@ import multer from "multer";
 import path from "path";
 import fs from "fs";
 
-const UPLOAD_DIR = "uploads/documents";
+const __dirname = new URL(".", import.meta.url).pathname;
 
-// 1️⃣ Ensure directory exists (VERY IMPORTANT)
+// Absolute path inside container
+const UPLOAD_DIR = path.join("/app/uploads/documents");
+
+// 1️⃣ Ensure directory exists
 if (!fs.existsSync(UPLOAD_DIR)) {
   fs.mkdirSync(UPLOAD_DIR, { recursive: true });
 }
@@ -15,8 +18,9 @@ const storage = multer.diskStorage({
     cb(null, UPLOAD_DIR);
   },
   filename: (req, file, cb) => {
-    const uniqueName =
-      Date.now() + "-" + Math.round(Math.random() * 1e9);
+    const uniqueName = `${Date.now()}-${Math.round(
+      Math.random() * 1e9
+    )}`;
     cb(null, uniqueName + path.extname(file.originalname));
   },
 });
@@ -30,13 +34,7 @@ const fileFilter = (req, file, cb) => {
   ];
 
   if (!allowedTypes.includes(file.mimetype)) {
-    return cb(
-      new multer.MulterError(
-        "LIMIT_UNEXPECTED_FILE",
-        "Invalid file type"
-      ),
-      false
-    );
+    return cb(new Error("Invalid file type"), false);
   }
 
   cb(null, true);

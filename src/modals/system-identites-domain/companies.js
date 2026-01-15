@@ -47,13 +47,18 @@ Company.init(
       allowNull: false,
       defaultValue: true,
     },
+    isActive:{
+      type:DataTypes.STRING,
+      allowNull:false,
+      defaultValue:"Y"
+    }
   },
   {
     sequelize,
     modelName: "Company",
     tableName: "companies",
     timestamps: true,
-    underscored: true,
+    // underscored: true,
   }
 );
 

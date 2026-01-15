@@ -1,6 +1,7 @@
 import { Document } from "../../modals/index.js";
 import { ROLES } from "../../constant/roles.js";
 import { DOCUMENT_STATUS } from "../../constant/documentStatus.js";
+import { where } from "sequelize";
 
 export const uploadDocument = async (req, res) => {
   try {
@@ -24,9 +25,9 @@ export const uploadDocument = async (req, res) => {
     // 2️⃣ Decide verification status BASED ON ROLE
     let documentStatus = DOCUMENT_STATUS.PENDING;
 
-    if (req.user.roleId === ROLES.SUPER_ADMIN) {
-      documentStatus = DOCUMENT_STATUS.VERIFIED;
-    }
+    // if (req.user.roleId === ROLES.SUPER_ADMIN) {
+    //   documentStatus = DOCUMENT_STATUS.VERIFIED;
+    // }
 
     if (![ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN].includes(req.user.roleId)) {
       return res.status(403).json({
@@ -117,4 +118,54 @@ export const verifyDocument = async (req, res) => {
     });
   }
 };
+
+
+export const documentStatusVerification = async (req, res) => {
+  try {
+    const { documentId } = req.params;
+    const { documentStatus } = req.body;
+
+    if (!documentId) {
+      return res.status(400).json({
+        success: false,
+        message: "Document ID is required",
+      });
+    }
+
+    if (!documentStatus) {
+      return res.status(400).json({
+        success: false,
+        message: "Document status is required",
+      });
+    }
+
+    const document = await Document.findOne({
+      where: { id: documentId },
+    });
+
+    if (!document) {
+      return res.status(404).json({
+        success: false,
+        message: "Document not found",
+      });
+    }
+
+    await document.update({
+      status: documentStatus,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Document updated successfully",
+    });
+  } catch (error) {
+    console.error("Document status update error:", error);
+
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
 
