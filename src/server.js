@@ -3,7 +3,8 @@ import dotenv from 'dotenv';
 import authRoutes from './routes/system-identites-domain-routes/authRoutes.js';
 import companiesRoutes from "./routes/system-identites-domain-routes/companiesRoutes.js";
 import DocumentRoutes from "./routes/system-identites-domain-routes/documentRoutes.js";
-import AdminRoutes from "./routes/system-identites-domain-routes/AdminControllerRoutes.js"
+import AdminRoutes from "./routes/system-identites-domain-routes/AdminControllerRoutes.js";
+import DriverRoutes from "./routes/operational-domain-routes/driver-module/DrivverRoutes.js";
 import cookieParser from 'cookie-parser';
 import cors from "cors"
 dotenv.config();
@@ -38,6 +39,7 @@ app.use('/api/v1/fleetlio/auth', authRoutes);
 app.use('/api/v1/fleetlio/companies',companiesRoutes);
 app.use('/api/v1/fleetlio/document',DocumentRoutes);
 app.use('/api/v1/fleetlio/Admins',AdminRoutes);
+app.use('/api/v1/flletlio/driver',DriverRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

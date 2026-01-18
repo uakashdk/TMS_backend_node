@@ -100,6 +100,18 @@ Admins.hasMany(Jobs, {
   as: "created_jobs",
 });
 
+// Drivers ↔ Admins (Driver Credential Mapping)
+Drivers.belongsTo(Admins, {
+  foreignKey: "user_id",
+  as: "admins"
+});
+
+Admins.hasOne(Drivers, {
+  foreignKey: "user_id",
+  as: "driverProfile"
+});
+
+
 // State ↔ City
 CityMaster.belongsTo(StateMaster, { foreignKey: "state_id", as: "state" });
 StateMaster.hasMany(CityMaster, {

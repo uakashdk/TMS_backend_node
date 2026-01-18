@@ -90,6 +90,11 @@ Driver.init(
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
+    is_active: {
+      type:DataTypes.STRING,
+      allowNull:true,
+      defaultValue:"Y"
+    },
 
     created_by: {
       type: DataTypes.INTEGER,
