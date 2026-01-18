@@ -10,7 +10,7 @@ const router = express.Router();
 router.post(
   "/upload",
   verifyAccessToken,
-  requireRole([ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN]),
+  requireRole([ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER]),
   upload.single("document"),
   multerErrorHandler,
   uploadDocument
@@ -22,7 +22,7 @@ router.patch(
   requireRole([ROLES.SUPER_ADMIN]),
   verifyDocument
 );
-
+ 
 router.post("/documentStatus/:documentId",verifyAccessToken,requireSuperAdmin,documentStatusVerification)
 
 

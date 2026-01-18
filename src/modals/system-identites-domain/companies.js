@@ -58,7 +58,7 @@ Company.init(
     modelName: "Company",
     tableName: "companies",
     timestamps: true,
-    // underscored: true,
+     underscored: true,
   }
 );
 

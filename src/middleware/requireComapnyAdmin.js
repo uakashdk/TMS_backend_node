@@ -1,4 +1,6 @@
-import requireRole from "./requireRole.js"
-import { ROLES } from "../constant/roles.js"
+import requireRole from "./requireRole.js";
+import { ROLES } from "../constant/roles.js";
 
-export default requireRole(ROLES.COMPANY_ADMIN);
+const requireCompanyAdmin = requireRole([ROLES.COMPANY_ADMIN]);
+
+export default requireCompanyAdmin;

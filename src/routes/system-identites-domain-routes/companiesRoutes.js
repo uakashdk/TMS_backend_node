@@ -1,5 +1,5 @@
 import express from "express";
-import { createCompany,getAllCompanies,verifyCompanyDocument, getMyCompany, getCompanyDetailsById,statusVerification,deleteCompanyById } from "../../controller/system-identies-domain-controller/company-module/companyController.js";
+import { createCompany,getAllCompanies,updateEntityDocumentProfile, getMyCompany, getCompanyDetailsById,statusVerification,deleteCompanyById } from "../../controller/system-identies-domain-controller/company-module/companyController.js";
 import verifyAccessToken from "../../middleware/AuthMiddleware.js";
 import requireSuperAdmin from "../../middleware/requireSuperAdmin.js";
 import {createCompanySchema} from "../../validation/system-identites-domain-validation/companiesValidation.js"
@@ -22,7 +22,7 @@ router.post(
  router.patch(
   "/:companyId/documents/:documentId/verify",
   verifyAccessToken,
-  verifyCompanyDocument
+  updateEntityDocumentProfile
 );
 
 router.get(

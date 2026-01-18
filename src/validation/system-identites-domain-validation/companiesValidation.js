@@ -1,39 +1,17 @@
 import Joi from "joi";
 export const createCompanySchema = Joi.object({
-  name: Joi.string()
-    .trim()
-    .min(2)
-    .max(255)
-    .required(),
+   name: Joi.string().required(),
+  address: Joi.string().required(),
+  company_code: Joi.string().required(),
+  company_email: Joi.string().email().required(),
+  contact_person: Joi.string().required(),
+  status: Joi.boolean().optional(),
 
-  address: Joi.string()
-    .trim()
-    .max(500)
-    .allow(null, ""),
-
-  company_code: Joi.string()
-    .trim()
-    .uppercase()
-    .min(2)
-    .max(50)
-    .required(),
-
-  company_email: Joi.string()
-    .email()
-    .required(),
-
-  contact_person: Joi.string()
-    .trim()
-    .max(255)
-    .allow(null, ""),
-
-  document_id: Joi.number()
-    .integer()
-    .positive()
-    .allow(null),
-
-  status: Joi.boolean()
-    .optional(),
+  // 🔥 ADMIN FIELDS (MANDATORY)
+  Adminname: Joi.string().required(),
+  Adminemail: Joi.string().email().required(),
+  Adminpassword: Joi.string().min(8).required(),
+  Adminphone: Joi.string().required(),
 });
 export const updateCompanySchema = Joi.object({
   name: Joi.string()

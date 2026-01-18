@@ -54,6 +54,11 @@ Admin.init(
       allowNull: false,
       defaultValue: false,
     },
+    isVerifiedDriver:{
+      type:DataTypes.BOOLEAN,
+      allowNull:true,
+      defaultValue:false
+    }
   },
   {
     sequelize,

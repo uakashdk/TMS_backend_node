@@ -1,54 +1,114 @@
-import { Companies } from "../../../modals/index.js";
+import { Admins, Companies } from "../../../modals/index.js";
 import { Op, where } from "sequelize";
 import { Document } from "../../../modals/index.js";
-import {ROLES} from "../../../constant/roles.js";
+import { ROLES } from "../../../constant/roles.js";
+import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 import { sequelize } from "../../../Config/Db.js";
+import { response } from "express";
 dotenv.config();
 
 export const createCompany = async (req, res) => {
+  const transaction = await sequelize.transaction();
+
   try {
-    // ✅ Data is already validated by Joi
     const {
       name,
       address,
       company_code,
       company_email,
       contact_person,
-      // document_id,
       status,
+      Adminname,
+      Adminemail,
+      Adminphone,
+      Adminpassword,
     } = req.body;
 
-    // ✅ Check unique email
+    // 🔒 HARD VALIDATION (admin is mandatory)
+    if (!Adminname || !Adminemail || !Adminpassword) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Company admin details are required",
+      });
+    }
+
+    // ✅ Check company uniqueness
     const existingCompany = await Companies.findOne({
       where: { company_email },
+      transaction,
     });
 
     if (existingCompany) {
+      await transaction.rollback();
       return res.status(409).json({
         success: false,
         message: "Company with this email already exists",
       });
     }
 
-    // ✅ Create company
-    const company = await Companies.create({
-      name,
-      address,
-      company_code,
-      company_email,
-      contact_person,
-      // document_id,
-      status,
+    // ✅ Check admin uniqueness BEFORE company creation
+    const existingAdmin = await Admins.findOne({
+      where: { email: Adminemail },
+      transaction,
     });
+
+    if (existingAdmin) {
+      await transaction.rollback();
+      return res.status(409).json({
+        success: false,
+        message: "Admin with this email already exists",
+      });
+    }
+
+    // ✅ Create company
+    const company = await Companies.create(
+      {
+        name,
+        address,
+        company_code,
+        company_email,
+        contact_person,
+        status,
+      },
+      { transaction }
+    );
+
+    // ✅ Hash password
+    const hashedPassword = await bcrypt.hash(Adminpassword, 12);
+
+    // ✅ Create company admin (MANDATORY)
+    const admin = await Admins.create(
+      {
+        username: Adminname,
+        email: Adminemail,
+        password: hashedPassword,
+        phone: Adminphone,
+        role_id: ROLES.COMPANY_ADMIN, // 🔒 constant
+        company_id: company.id,
+        status,
+      },
+      { transaction }
+    );
+
+    // ✅ Commit ONLY when BOTH succeed
+    await transaction.commit();
 
     return res.status(201).json({
       success: true,
-      message: "Company created successfully",
-      data: company,
+      message: "Company and company admin created successfully",
+      data: {
+        company,
+        admin: {
+          id: admin.id,
+          username: admin.username,
+          email: admin.email,
+        },
+      },
     });
-
   } catch (error) {
+    await transaction.rollback();
     console.error("Create Company Error:", error);
 
     return res.status(500).json({
@@ -57,6 +117,8 @@ export const createCompany = async (req, res) => {
     });
   }
 };
+
+
 
 export const getAllCompanies = async (req, res) => {
   try {
@@ -69,7 +131,7 @@ export const getAllCompanies = async (req, res) => {
     const { search, status } = req.query;
 
     const whereCondition = {
-      isActive: "Y", // ✅ ALWAYS fetch only active companies
+      is_active: "Y", // ✅ ALWAYS fetch only active companies
     };
 
     // 🔍 Search (name / email / code)
@@ -126,46 +188,55 @@ export const getAllCompanies = async (req, res) => {
 
 
 
-export const verifyCompanyDocument = async (req, res) => {
+export const updateEntityDocumentProfile = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { companyId, documentId } = req.params;
-    const { companyAddress, contactPerson } = req.body;
+    const { entityType, entityId, documentId } = req.params;
+    const payload = req.body;
 
-
-    // console.log("req of user role",req.user.role)
-    // // 🔐 Only SUPER_ADMIN can verify
-    // if (req.user.role !== "SUPER_ADMIN") {
-    //   return res.status(403).json({
-    //     success: false,
-    //     message: "Access denied",
-    //   });
-    // }
-
-    // ✅ Validate params
-    if (!companyId || !documentId) {
+    // 1️⃣ Validate params
+    if (!entityType || !entityId || !documentId) {
       return res.status(400).json({
         success: false,
-        message: "Company ID and Document ID are required",
+        message: "Entity type, entity ID, and document ID are required",
       });
     }
 
-    // ✅ Check company exists
-    const company = await Companies.findByPk(companyId, { transaction });
-    if (!company) {
+    // 2️⃣ Resolve model dynamically
+    let EntityModel;
+
+    switch (entityType) {
+      case "COMPANY":
+        EntityModel = Companies;
+        break;
+
+      case "COMPANY_ADMIN":
+        EntityModel = CompanyAdmins;
+        break;
+
+      default:
+        return res.status(400).json({
+          success: false,
+          message: "Invalid entity type",
+        });
+    }
+
+    // 3️⃣ Check entity exists
+    const entity = await EntityModel.findByPk(entityId, { transaction });
+    if (!entity) {
       return res.status(404).json({
         success: false,
-        message: "Company not found",
+        message: `${entityType} not found`,
       });
     }
 
-    // ✅ Find document
+    // 4️⃣ Check document exists (NO STATUS CHANGE)
     const document = await Document.findOne({
       where: {
         id: documentId,
-        entity_type: "COMPANY",
-        entity_id: companyId,
+        entity_type: entityType,
+        entity_id: entityId,
       },
       transaction,
     });
@@ -177,57 +248,49 @@ export const verifyCompanyDocument = async (req, res) => {
       });
     }
 
-    if (document.status === "VERIFIED") {
-      return res.status(400).json({
-        success: false,
-        message: "Document already verified",
-      });
-    }
-
-    // ✅ Verify document
-    await document.update(
-      {
-        status: "VERIFIED",
-        verified_by: req.user.id,
-        verified_at: new Date(),
-      },
-      { transaction }
-    );
-
-    // ✅ Prepare safe company update payload
+    // 5️⃣ Prepare update payload
     const updatePayload = {
-      document_id: document.id,
-      status: "VERIFIED",
+      document_id: document.id, // mapping only
     };
 
-    if (companyAddress) updatePayload.address = companyAddress;
-    if (contactPerson) updatePayload.contact_person = contactPerson;
+    // Company fields
+    if (payload.address) updatePayload.address = payload.address;
+    if (payload.contactPerson)
+      updatePayload.contact_person = payload.contactPerson;
 
-    // ✅ Update company
-    await company.update(updatePayload, { transaction });
+    // Admin fields
+    if (payload.fullName) updatePayload.full_name = payload.fullName;
+    if (payload.mobile) updatePayload.mobile = payload.mobile;
 
-    // ✅ Commit transaction
+    // 6️⃣ Update entity (STATUS REMAINS PENDING)
+    await entity.update(updatePayload, { transaction });
+
+    // 7️⃣ Commit
     await transaction.commit();
 
     return res.status(200).json({
       success: true,
-      message: "Company document verified successfully",
+      message: "Profile updated successfully",
       data: {
-        companyId: company.id,
+        entityType,
+        entityId,
         documentId: document.id,
-        status: "VERIFIED",
+        entityStatus: "PENDING",
+        documentStatus: "PENDING",
       },
     });
   } catch (error) {
     await transaction.rollback();
 
-    console.error("Verify Company Document Error:", error);
+    console.error("Update Entity Document Profile Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
 };
+
+
 
 
 
@@ -243,7 +306,11 @@ export const getMyCompany = async (req, res) => {
     }
 
     const company = await Companies.findOne({
-      where: { id: companyId && isActive=="Y" },
+      where: {
+  id: companyId,
+  is_active: "Y",
+},
+
       attributes: [
         "id",
         "name",
@@ -267,7 +334,7 @@ export const getMyCompany = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Company fetched successfully",
-      data: company,
+      data: [company],
     });
 
   } catch (error) {
@@ -306,7 +373,7 @@ export const getCompanyDetailsById = async (req, res) => {
     const company = await Companies.findOne({
       where: {
         id: companyId,
-        isActive: "Y",
+        is_active: "Y",
       },
       attributes: [
         "id",
@@ -370,7 +437,7 @@ export const deleteCompanyById = async (req, res) => {
 
     // ✅ Check company existence
     const company = await Companies.findOne({
-      where: { id: companyId, isActive: "Y" },
+      where: { id: companyId, is_active: "Y" },
     });
 
     if (!company) {
@@ -382,7 +449,7 @@ export const deleteCompanyById = async (req, res) => {
 
     // ✅ Soft delete
     await Companies.update(
-      { isActive: "N" },
+      { is_active: "N" },
       { where: { id: companyId } }
     );
 
@@ -422,7 +489,7 @@ export const statusVerification = async (req, res) => {
 
     // ✅ Check company existence
     const company = await Companies.findOne({
-      where: { id: CompanyId, isActive: "Y" },
+      where: { id: CompanyId, is_active: "Y" },
     });
 
     if (!company) {
@@ -435,7 +502,7 @@ export const statusVerification = async (req, res) => {
     // ✅ Update status
     await Companies.update(
       { status },
-      { where: { id: CompanyId, isActive: "Y" } }
+      { where: { id: CompanyId, is_active: "Y" } }
     );
 
     return res.status(200).json({
