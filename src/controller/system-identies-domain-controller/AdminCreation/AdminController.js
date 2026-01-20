@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 import { Admins } from "../../../modals/index.js";
-import { ROLES } from "../../../constant/roles.js";
+import { ROLES, ROLE_NAME_MAP } from "../../../constant/roles.js";
 
 export const userCreation = async (req, res) => {
   try {
@@ -123,7 +123,6 @@ export const getAllUsers = async (req, res) => {
   try {
     const companyId = req.user.companyId;
 
-    // 🔒 Roles visible to Company Admin
     const allowedRoles = [
       ROLES.OPERATIONAL_MANAGER,
       ROLES.ACCOUNTS_MANAGER,
@@ -131,7 +130,6 @@ export const getAllUsers = async (req, res) => {
       ROLES.DRIVER,
     ];
 
-    // ✅ Fetch users in the company with allowed roles
     const users = await Admins.findAll({
       where: {
         company_id: companyId,
@@ -140,9 +138,22 @@ export const getAllUsers = async (req, res) => {
       attributes: ["id", "username", "email", "phone", "role_id", "status"],
     });
 
+    // 🔁 Transform response (VERY IMPORTANT)
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      phone: user.phone,
+      status: user.status,
+      role: {
+        id: user.role_id,
+        name: ROLE_NAME_MAP[user.role_id] || "Unknown",
+      },
+    }));
+
     return res.status(200).json({
       success: true,
-      data: users,
+      data: formattedUsers,
     });
 
   } catch (error) {
@@ -150,7 +161,7 @@ export const getAllUsers = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error,
+      error
     });
   }
 };
