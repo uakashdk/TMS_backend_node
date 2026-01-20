@@ -68,6 +68,16 @@ Vehicle.init(
       allowNull: false,
       defaultValue: true,
     },
+    isMkt:{
+      type:DataTypes.STRING,
+      allowNull:true,
+      defaultValue:"N"
+    },
+     is_active:{
+      type:DataTypes.STRING,
+      allowNull:true,
+      defaultValue:"Y"
+     },
 
     created_by: {
       type: DataTypes.INTEGER,

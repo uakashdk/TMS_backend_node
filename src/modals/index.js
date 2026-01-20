@@ -38,6 +38,8 @@ import Invoices from "./finance-domain/invoice.js";
 import InvoiceCharge from "./finance-domain/InvoiceCharge.js";
 import Payment from "./finance-domain/payment.js";
 import TbillMaster from "./finance-domain/tBill_master.js";
+import GpsLocation from "./operational-domain/gps_location.js";
+import GeoFence from "./operational-domain/geo_fence.js";
 
 /* 🔥 THIS IS THE MISSING LINE 🔥 */
 import "./association.js";
@@ -76,5 +78,7 @@ export {
   Invoices,
   InvoiceCharge,
   Payment,
-  TbillMaster
+  TbillMaster,
+  GpsLocation,
+  GeoFence
 };

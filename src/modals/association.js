@@ -29,7 +29,9 @@ import {
   Invoices,
   InvoiceCharge,
   Payment,
-  TbillMaster
+  TbillMaster,
+  GpsLocation,
+  GeoFence
 } from "./index.js";
 
 /* ===========================
@@ -126,6 +128,19 @@ Companies.hasMany(Route, { foreignKey: "company_id", as: "routes" });
 // Vehicles ↔ Companies
 Vehicles.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
 Companies.hasMany(Vehicles, { foreignKey: "company_id", as: "vehicles" });
+
+// Vehicle model
+Vehicles.hasMany(GpsLocation, {
+  foreignKey: "vehicle_id",
+  as: "gpsLocations",
+});
+
+// GpsLocation model
+GpsLocation.belongsTo(Vehicles, {
+  foreignKey: "vehicle_id",
+  as: "vehicle",
+});
+
 
 // Drivers ↔ Companies
 Drivers.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
