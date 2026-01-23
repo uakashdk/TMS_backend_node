@@ -1,6 +1,11 @@
 import bcrypt from "bcrypt";
 import { Admins } from "../../../modals/index.js";
 import { ROLES, ROLE_NAME_MAP } from "../../../constant/roles.js";
+import { Op } from "sequelize";
+import dotenv from "dotenv"
+import { Document } from "../../../modals/index.js";
+
+dotenv.config();
 
 export const userCreation = async (req, res) => {
   try {
@@ -122,6 +127,12 @@ export const getAssignableRoles = (req, res) => {
 export const getAllUsers = async (req, res) => {
   try {
     const companyId = req.user.companyId;
+    const search = req.query.search || "";
+
+    // Pagination
+    const page = parseInt(req.query.page, 10) || 1;
+    const limit = 10;
+    const offset = (page - 1) * limit;
 
     const allowedRoles = [
       ROLES.OPERATIONAL_MANAGER,
@@ -130,16 +141,29 @@ export const getAllUsers = async (req, res) => {
       ROLES.DRIVER,
     ];
 
-    const users = await Admins.findAll({
-      where: {
-        company_id: companyId,
-        role_id: allowedRoles,
+    const whereCondition = {
+      company_id: companyId,
+      role_id: {
+        [Op.in]: allowedRoles,   // ✅ IMPORTANT FIX
       },
+    };
+
+    if (search) {
+      whereCondition.username = {
+        [Op.like]: `%${search}%`,
+      };
+    }
+
+    const { rows, count } = await Admins.findAndCountAll({
+      where: whereCondition,
       attributes: ["id", "username", "email", "phone", "role_id", "status"],
+      order: [["createdAt", "DESC"]],
+      limit,
+      offset,
+      distinct: true,           // ✅ PREVENT DUPLICATE ROW COUNT
     });
 
-    // 🔁 Transform response (VERY IMPORTANT)
-    const formattedUsers = users.map((user) => ({
+    const formattedUsers = rows.map((user) => ({
       id: user.id,
       username: user.username,
       email: user.email,
@@ -154,17 +178,21 @@ export const getAllUsers = async (req, res) => {
     return res.status(200).json({
       success: true,
       data: formattedUsers,
+      pagination: {
+        totalRecords: count,
+        currentPage: page,
+        totalPages: Math.ceil(count / limit),
+        pageSize: limit,
+      },
     });
-
   } catch (error) {
-    console.log("Error fetching users:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
-      error
     });
   }
 };
+
 
 export const getUserDetailsById = async (req, res) => {
   try {
@@ -201,10 +229,30 @@ export const getUserDetailsById = async (req, res) => {
       });
     }
 
+        const documents = await Document.findAll({
+          where: {
+            entity_id: userId,
+            entity_type: "User",
+          },
+          attributes: [
+            "id",
+            "entity_type",
+            "document_group",
+            "document_type",
+            "file_url",
+            "content",
+            "status",
+          ],
+        });
+
+         const URL = process.env.local_URL;
+
     return res.status(200).json({
       success: true,
       message: "User fetched successfully",
       data: user,
+      documents,
+      api:URL
     });
 
   } catch (error) {

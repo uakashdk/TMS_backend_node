@@ -1,4 +1,4 @@
-import { Admins, Drivers } from "../../../modals/index.js";
+import { Admins, Drivers, Document } from "../../../modals/index.js";
 import { sequelize } from "../../../Config/Db.js";
 import { ROLES } from "../../../constant/roles.js";
 import bcrypt from "bcrypt";
@@ -25,7 +25,6 @@ export const createDriver = async (req, res) => {
     console.log("req.user", req.user)
     const companyId = req.user?.companyId;
     const createdBy = req.user?.userId;
-
     // 1️⃣ Company check
     if (!companyId) {
       await transaction.rollback();
@@ -121,7 +120,6 @@ export const getAllDrivers = async (req, res) => {
       });
     }
 
-    // Query params
     const {
       search = "",
       page = 1,
@@ -129,33 +127,6 @@ export const getAllDrivers = async (req, res) => {
     } = req.query;
 
     const offset = (page - 1) * limit;
-
-    // const { rows, count } = await Drivers.findAndCountAll({
-    //   where: {
-    //     company_id: companyId,
-    //     is_active:"Y",
-    //     [Op.or]: [
-    //       { name: { [Op.like]: `%${search}%` } },
-    //       { phone_number: { [Op.like]: `%${search}%` } },
-    //       { email_address: { [Op.like]: `%${search}%` } },
-    //       { driver_license_number: { [Op.like]: `%${search}%` } }
-    //     ]
-    //   },
-    //   include: [
-    //     {
-    //       model: Admins,
-    //       as: "admins",               // ⚠️ association required
-    //       attributes: ["id", "isVerifiedDriver"],
-    //       where: {
-    //         role_id: ROLES.DRIVER,
-    //         company_id: companyId
-    //       }
-    //     }
-    //   ],
-    //   order: [["createdAt", "DESC"]],
-    //   limit: Number(limit),
-    //   offset: Number(offset)
-    // });
 
     const { rows, count } = await Admins.findAndCountAll({
       where: {
@@ -166,15 +137,20 @@ export const getAllDrivers = async (req, res) => {
         {
           model: Drivers,
           as: "driverProfile",
-          required: false // 🔥 LEFT JOIN (MOST IMPORTANT)
+          required: false, // ✅ KEEP LEFT JOIN
+          ...(search && {
+            where: {
+              name: {
+                [Op.like]: `%${search}%`
+              }
+            }
+          })
         }
       ],
       order: [["createdAt", "DESC"]],
       limit: Number(limit),
       offset: Number(offset)
     });
-
-
 
     return res.status(200).json({
       success: true,
@@ -195,6 +171,7 @@ export const getAllDrivers = async (req, res) => {
     });
   }
 };
+
 
 
 
@@ -239,6 +216,22 @@ export const getDriverDetailsById = async (req, res) => {
         message: "Driver not found"
       });
     }
+      console.log("userId",id)
+    const documents = await Document.findAll({
+          where: {
+            entity_id: id,
+          },
+          attributes: [
+            "id",
+            "entity_type",
+            "document_group",
+            "document_type",
+            "file_url",
+            "content",
+            "status",
+          ],
+        });
+          const URL = process.env.local_URL;
 
     return res.status(200).json({
       success: true,
@@ -252,7 +245,9 @@ export const getDriverDetailsById = async (req, res) => {
           status: driverAdmin.status
         },
         driverProfile: driverAdmin.driverProfile // null if unverified
-      }
+      },
+      documents,
+      api:URL
     });
 
   } catch (error) {

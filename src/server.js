@@ -40,7 +40,7 @@ app.use('/api/v1/fleetlio/auth', authRoutes);
 app.use('/api/v1/fleetlio/companies',companiesRoutes);
 app.use('/api/v1/fleetlio/document',DocumentRoutes);
 app.use('/api/v1/fleetlio/Admins',AdminRoutes);
-app.use('/api/v1/flletlio/driver',DriverRoutes);
+app.use('/api/v1/fleetlio/driver',DriverRoutes);
 app.use('/api/v1/fleetlio/vehicle',VehicleRoutes);
 
 const __filename = fileURLToPath(import.meta.url);

@@ -1,5 +1,5 @@
 import { sequelize } from "../../../Config/Db.js";
-import { Vehicles } from "../../../modals/index.js";
+import { Vehicles, Document } from "../../../modals/index.js";
 import { Op } from "sequelize";
 
 export const createVehicles = async (req, res) => {
@@ -167,11 +167,30 @@ export const getVehiclesDetailsById = async (req, res) => {
       });
     }
 
+    const documents = await Document.findAll({
+      where: {
+        entity_id: id,
+        entity_type: "Vehicle",
+      },
+      attributes: [
+        "id",
+        "entity_type",
+        "document_group",
+        "document_type",
+        "file_url",
+        "content",
+        "status",
+      ],
+    });
+
     return res.status(200).json({
       success: true,
       message: "Vehicle fetched successfully",
       data: vehicle,
+      documents,
+      api: process.env.local_URL,
     });
+
   } catch (error) {
     console.error("error while fetching vehicle =======>", error);
     return res.status(500).json({
@@ -182,6 +201,7 @@ export const getVehiclesDetailsById = async (req, res) => {
 };
 
 
+
 export const UpdateVehicleById = async (req, res) => {
   const transaction = await sequelize.transaction();
 
@@ -189,7 +209,6 @@ export const UpdateVehicleById = async (req, res) => {
     const companyId = req?.user?.companyId;
     const userId = req?.user?.userId;
     const { id } = req.params;
-  console.log("id========>,",id,"companyId==========>",companyId,"userId",userId)
     if (!companyId || !userId) {
       await transaction.rollback();
       return res.status(401).json({
@@ -209,15 +228,14 @@ export const UpdateVehicleById = async (req, res) => {
     // 1️⃣ Check if vehicle exists & belongs to company
     const vehicle = await Vehicles.findOne({
       where: {
-        id:id,
+        id: id,
         company_id: companyId,
         // is_active: "Y",
       },
       transaction,
     });
 
- console.log("vehicle===========>",vehicle)
-
+ 
     if (!vehicle) {
       await transaction.rollback();
       return res.status(404).json({

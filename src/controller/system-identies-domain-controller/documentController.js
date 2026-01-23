@@ -29,7 +29,7 @@ export const uploadDocument = async (req, res) => {
     //   documentStatus = DOCUMENT_STATUS.VERIFIED;
     // }
 
-    if (![ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN].includes(req.user.roleId)) {
+    if (![ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER].includes(req.user.roleId)) {
       return res.status(403).json({
         success: false,
         message: "You are not allowed to upload documents",

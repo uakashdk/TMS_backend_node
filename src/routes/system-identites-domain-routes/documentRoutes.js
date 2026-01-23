@@ -10,7 +10,7 @@ const router = express.Router();
 router.post(
   "/upload",
   verifyAccessToken,
-  requireRole([ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER]),
+  requireRole([ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
   upload.single("document"),
   multerErrorHandler,
   uploadDocument
@@ -24,6 +24,8 @@ router.patch(
 );
  
 router.post("/documentStatus/:documentId",verifyAccessToken,requireSuperAdmin,documentStatusVerification)
+
+router.post("/documentUsers/:documentId",verifyAccessToken,documentStatusVerification)
 
 
 export default router;
