@@ -31,7 +31,8 @@ import {
   Payment,
   TbillMaster,
   GpsLocation,
-  GeoFence
+  GeoFence,
+  VehicleDriverAssignment
 } from "./index.js";
 
 /* ===========================
@@ -140,6 +141,37 @@ GpsLocation.belongsTo(Vehicles, {
   foreignKey: "vehicle_id",
   as: "vehicle",
 });
+
+VehicleDriverAssignment.belongsTo(Admins, {
+  foreignKey: "created_by",
+  as: "createdBy",
+});
+
+VehicleDriverAssignment.belongsTo(Admins, {
+  foreignKey: "updated_by",
+  as: "updatedBy",
+});
+
+Vehicles.hasMany(VehicleDriverAssignment, {
+  foreignKey: "vehicle_id",
+  as: "driverAssignments"
+});
+
+
+VehicleDriverAssignment.belongsTo(Vehicles, {
+  foreignKey: "vehicle_id",
+  as: "vehicle"
+});
+
+VehicleDriverAssignment.belongsTo(Drivers, {
+  foreignKey: "driver_id",
+  as: "driver"
+});
+
+
+
+
+
 
 
 // Drivers ↔ Companies

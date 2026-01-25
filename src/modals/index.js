@@ -40,6 +40,7 @@ import Payment from "./finance-domain/payment.js";
 import TbillMaster from "./finance-domain/tBill_master.js";
 import GpsLocation from "./operational-domain/gps_location.js";
 import GeoFence from "./operational-domain/geo_fence.js";
+import VehicleDriverAssignment from "../modals/operational-domain/VehicleDriverAssignment.js"
 
 /* 🔥 THIS IS THE MISSING LINE 🔥 */
 import "./association.js";
@@ -80,5 +81,6 @@ export {
   Payment,
   TbillMaster,
   GpsLocation,
-  GeoFence
+  GeoFence,
+  VehicleDriverAssignment
 };
