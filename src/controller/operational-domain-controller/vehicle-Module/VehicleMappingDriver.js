@@ -343,9 +343,11 @@ export const getAssignedDriversByVehicle = async (req, res) => {
       vehicleId,
       assigned: true,
       drivers: assignments.map(a => ({
+        assignment:a.id,
         driverId: a.driver.id,
         name: a.driver.name,
         phone: a.driver.phone_number,
+        licenseNumber:a.driver.driver_license_number,
         startDateTime: a.start_datetime,
         remarks: a.remarks
       }))
@@ -420,6 +422,7 @@ export const getVehicleDriverAssignmentHistory = async (req, res) => {
       history: history.map(h => ({
         driverId: h.driver.id,
         driverName: h.driver.name,
+        driverLicense: h.driver.driver_license_number,
         phone: h.driver.phone_number,
         startDateTime: h.start_datetime,
         endDateTime: h.end_datetime,
