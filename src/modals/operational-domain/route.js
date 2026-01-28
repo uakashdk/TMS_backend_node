@@ -56,6 +56,10 @@ Route.init(
       type: DataTypes.INTEGER,
       allowNull: true,
     },
+    isActive: {
+      type: DataTypes.STRING,
+      defaultValue: true,
+    },
   },
   {
     sequelize,
