@@ -6,6 +6,7 @@ import DocumentRoutes from "./routes/system-identites-domain-routes/documentRout
 import AdminRoutes from "./routes/system-identites-domain-routes/AdminControllerRoutes.js";
 import DriverRoutes from "./routes/operational-domain-routes/driver-module/DrivverRoutes.js";
 import VehicleRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleRoutes.js";
+import PartyRoutes from "./routes/operational-domain-routes/party-module/partyControllerRoutes.js"
 import cookieParser from 'cookie-parser';
 import VehicleMappingDriverRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleMappingDriverRoutes.js";
 import cors from "cors"
@@ -44,6 +45,7 @@ app.use('/api/v1/fleetlio/Admins',AdminRoutes);
 app.use('/api/v1/fleetlio/driver',DriverRoutes);
 app.use('/api/v1/fleetlio/vehicle',VehicleRoutes);
 app.use("/api/v1/fleetlio/Vehiclemap",VehicleMappingDriverRoutes);
+app.use("/api/v1/fleetlio/parties",PartyRoutes)
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
