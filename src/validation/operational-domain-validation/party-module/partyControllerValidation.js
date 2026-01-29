@@ -7,8 +7,6 @@ const partyAddressSchema = Joi.object({
 
   address_line1: Joi.string().required(),
   address_line2: Joi.string().allow(null, ""),
-
-  city_id: Joi.number().integer().required(),
   state_id: Joi.number().integer().required(),
 
   postal_code: Joi.string().required(),
@@ -40,8 +38,9 @@ export const createPartySchema = Joi.object({
   party_name: Joi.string().required(),
 
   party_type: Joi.string()
-    .valid("client", "consignor", "consignee", "vendor", "broker")
-    .required(),
+  .valid("client", "consignor", "consignee", "vendor", "broker", "supplier")
+  .required(),
+
 
   contact_person: Joi.string().allow(null, ""),
   email: Joi.string().email().allow(null, ""),
@@ -60,7 +59,6 @@ const UpdatePartyAddressSchema = Joi.object({
 
   address_line1: Joi.string().required(),
   address_line2: Joi.string().max(255).allow(null, ""),
-  city_id: Joi.number().integer().required(),
   state_id: Joi.number().integer().required(),
   postal_code: Joi.string().length(6).pattern(/^[0-9]+$/).required(),
   country: Joi.string().min(2).max(100).default("India"),
@@ -68,9 +66,7 @@ const UpdatePartyAddressSchema = Joi.object({
 });
 
  const UpdatePartyGstSchema = Joi.object({
-  gst_number: Joi.string()
-    .length(15)
-    .required(), // you may validate format later if needed
+   gst_number: Joi.string().required(),// you may validate format later if needed
 
   state_id: Joi.number().integer().required(),
   gst_registration_type: Joi.string()
@@ -85,8 +81,9 @@ export const updatePartySchema = Joi.object({
   party_name: Joi.string().min(3).max(150).required(),
 
   party_type: Joi.string()
-    .valid("Client", "Supplier", "Vendor", "Consignor", "Consignee")
-    .required(),
+  .valid("client", "consignor", "consignee", "vendor", "broker", "supplier")
+  .required(),
+
 
   contact_person: Joi.string().min(3).max(100).allow(null, ""),
   phone_number: Joi.string().length(10).pattern(/^[0-9]+$/).allow(null, ""),

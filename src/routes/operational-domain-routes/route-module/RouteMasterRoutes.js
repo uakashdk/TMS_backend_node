@@ -5,7 +5,8 @@ import {
   getRouteDropdown,
   getRouteById,
   updateRoute,
-  deleteRoute
+  deleteRoute,
+  getAllState
 } from "../../../controller/operational-domain-controller/Route-module/RouteMasterController.js";
 
 import validateRequest from "../../../middleware/validationRequest.js";
@@ -57,6 +58,13 @@ router.delete(
   verifyAccessToken,
   requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER]),
   deleteRoute
+);
+
+router.get(
+  "/get-all-states",
+  verifyAccessToken,
+  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
+  getAllState
 );
 
 

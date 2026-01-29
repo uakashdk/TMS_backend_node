@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import {Route} from "../../../modals/index.js";
+import {Route, StateMaster} from "../../../modals/index.js";
 import {sequelize} from "../../../Config/Db.js"; // make sure sequelize is imported
 
 export const createRoute = async (req, res) => {
@@ -362,3 +362,23 @@ export const deleteRoute = async (req, res) => {
     });
   }
 };
+
+
+export const getAllState = async (req, res) => {
+  try {
+    const states = await StateMaster.findAll({
+      attributes: ['id', 'state_name'],
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: states,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "Failed to fetch states",
+      error: error.message,
+    });
+  }
+}

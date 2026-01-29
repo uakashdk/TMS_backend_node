@@ -36,11 +36,6 @@ PartyAddress.init(
       allowNull: true,
     },
 
-    city_id: {
-      type: DataTypes.INTEGER,
-      allowNull: false,
-    },
-
     state_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
