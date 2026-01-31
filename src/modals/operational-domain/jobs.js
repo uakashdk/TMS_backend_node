@@ -46,6 +46,18 @@ Job.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+    jobs_status: {
+  type: DataTypes.ENUM(
+    'PENDING',
+    'TRIP_CREATED',
+    'IN_PROGRESS',
+    'COMPLETED',
+    'CANCELLED'
+  ),
+  allowNull: false,
+  defaultValue: 'PENDING',
+},
+
     status: {
       type: DataTypes.BOOLEAN,
       allowNull: false,

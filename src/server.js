@@ -8,6 +8,7 @@ import DriverRoutes from "./routes/operational-domain-routes/driver-module/Drivv
 import VehicleRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleRoutes.js";
 import PartyRoutes from "./routes/operational-domain-routes/party-module/partyControllerRoutes.js";
 import RouteRoutes from "./routes/operational-domain-routes/route-module/RouteMasterRoutes.js"
+import JobRoutes from "./routes/operational-domain-routes/job-module/jobControllerRoutes.js";
 
 import cookieParser from 'cookie-parser';
 import VehicleMappingDriverRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleMappingDriverRoutes.js";
@@ -49,6 +50,7 @@ app.use('/api/v1/fleetlio/vehicle',VehicleRoutes);
 app.use("/api/v1/fleetlio/Vehiclemap",VehicleMappingDriverRoutes);
 app.use("/api/v1/fleetlio/parties",PartyRoutes);
 app.use("/api/v1/fleetlio/routes",RouteRoutes);
+app.use("/api/v1/fleetlio/jobs",JobRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
