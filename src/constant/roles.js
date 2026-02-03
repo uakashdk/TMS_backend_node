@@ -16,3 +16,14 @@ export const ROLE_NAME_MAP = {
   [ROLES.SUPPORT_MANAGER]: "Support Manager",
   [ROLES.DRIVER]: "Driver",
 };
+
+
+
+export const VALID_TRANSITIONS = {
+  PLANNED: ["STARTED", "CANCELLED"],
+  STARTED: ["COMPLETED"],
+  COMPLETED: [],
+  CANCELLED: []
+};
+
+

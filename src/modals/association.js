@@ -32,7 +32,8 @@ import {
   TbillMaster,
   GpsLocation,
   GeoFence,
-  VehicleDriverAssignment
+  VehicleDriverAssignment,
+  TripAdvance
 } from "./index.js";
 
 /* ===========================
@@ -200,6 +201,18 @@ Trips.hasMany(TripDriverMapping, {
   as: "driver_assignments",
 });
 
+Trips.hasOne(TripAdvance, {
+  foreignKey: "trip_id",
+  as: "advance",
+});
+
+
+TripAdvance.belongsTo(Trips, {
+  foreignKey: "trip_id",
+  as: "trip",
+});
+
+
 TripDriverMapping.belongsTo(Drivers, {
   foreignKey: "driver_id",
   as: "driver",
@@ -229,6 +242,40 @@ PODDocument.belongsTo(POD, { foreignKey: "pod_id", as: "pod" });
 POD.hasMany(PODDocument, {
   foreignKey: "pod_id",
   as: "documents",
+});
+
+
+// Vehicle
+Trips.belongsTo(Vehicles, {
+  foreignKey: "vehicle_id",
+  as: "vehicle"
+});
+
+Vehicles.hasMany(Trips, {
+  foreignKey: "vehicle_id",
+  as: "trips"
+});
+
+// Primary Driver
+Trips.belongsTo(Drivers, {
+  foreignKey: "primary_driver_id",
+  as: "primaryDriver"
+});
+
+Drivers.hasMany(Trips, {
+  foreignKey: "primary_driver_id",
+  as: "primaryDriverTrips"
+});
+
+// ✅ Secondary Driver (THIS WAS MISSING)
+Trips.belongsTo(Drivers, {
+  foreignKey: "secondary_driver_id",
+  as: "secondaryDriver"
+});
+
+Drivers.hasMany(Trips, {
+  foreignKey: "secondary_driver_id",
+  as: "secondaryDriverTrips"
 });
 
 /* ===========================

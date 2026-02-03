@@ -1,6 +1,6 @@
 import bcrypt from "bcrypt";
 
-const plainPassword = "Anshul@1234"; // 👈 change only this
+const plainPassword = "12345678"; // 👈 change only this
 
 const saltRounds = 10;
 
