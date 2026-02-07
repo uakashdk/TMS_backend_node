@@ -1,4 +1,4 @@
-import { Jobs,Party, Trips } from "../../../modals/index.js";
+import { Jobs,Party, Route, Trips } from "../../../modals/index.js";
 import { Op } from "sequelize";
 import { sequelize } from "../../../Config/Db.js";
 
@@ -15,7 +15,8 @@ export const createJob = async (req, res) => {
       goods_quantity,
       quantity_units,
       pickup_location,
-      dropoff_location
+      dropoff_location,
+      route_id,
     } = req.body;
 
     const existingJob = await Jobs.findOne({
@@ -46,7 +47,8 @@ export const createJob = async (req, res) => {
         goods_quantity,
         quantity_units,
         pickup_location,
-        dropoff_location
+        dropoff_location,
+        route_id
       },
       { transaction: t }
     );
@@ -217,6 +219,11 @@ export const getJobsDropdown = async (req, res) => {
           as: "customer",
           attributes: ["id", "party_name"],
         },
+        {
+          model:Route,
+           as: "route",
+          attributes:["id","route_name"]
+        }
       ],
       order: [["job_date", "ASC"]],
       limit: 20,
@@ -250,8 +257,9 @@ export const updateJob = async (req, res) => {
       quantity_units,
       pickup_location,
       dropoff_location,
+      route_id,
     } = req.body;
-
+     console.log("route_id:======>",route_id)
     const job = await Jobs.findOne({
       where: {
         id: jobId,
@@ -276,6 +284,7 @@ export const updateJob = async (req, res) => {
       quantity_units,
       pickup_location,
       dropoff_location,
+      route_id
     };
 
     // 🔑 Core business rule

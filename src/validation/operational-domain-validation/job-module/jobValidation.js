@@ -1,7 +1,7 @@
 import Joi from "joi";
 
 export const createJobSchema = Joi.object({
-  customer_id: Joi.number().integer().optional(),
+  customer_id: Joi.number().integer(),
 
   job_date: Joi.date().required(),
 
@@ -13,7 +13,8 @@ export const createJobSchema = Joi.object({
 
   pickup_location: Joi.string().trim().required(),
 
-  dropoff_location: Joi.string().trim().required()
+  dropoff_location: Joi.string().trim().required(),
+  route_id: Joi.number().integer().required(),
 });
 
 
@@ -25,4 +26,5 @@ export const updateJobSchema = Joi.object({
   quantity_units: Joi.string().required(),
   pickup_location: Joi.string().required(),
   dropoff_location: Joi.string().required(),
+  route_id:Joi.number().required(),
 });

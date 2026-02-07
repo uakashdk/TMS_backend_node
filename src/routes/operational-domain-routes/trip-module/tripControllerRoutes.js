@@ -6,12 +6,13 @@ import {
   updateTrip,
   updateTripStatus,
   startTripByDriver,
-  createTripAdvance,
+  upsertTripAdvance,
   completeTrip,
   createPOD,
   getPodById,
   createTripExpense,
-  getTripExpensesByTripId
+  getTripExpensesByTripId,
+  getTripAdvanceByTripId
 } from "../../../controller/operational-domain-controller/tripModule/tripController.js";
 import verifyAccessToken from "../../../middleware/verifyAccessToken.js";
 import validateRequest from "../../../middleware/validationRequest.js";
@@ -75,7 +76,7 @@ router.post(
     verifyAccessToken,
     requieRole([ROLES.COMPANY_ADMIN, ROLES.ACCOUNTS_MANAGER]),
     validateRequest(TripAdvanceSchema),
-    createTripAdvance
+    upsertTripAdvance
 )
 
 router.put(
@@ -113,6 +114,12 @@ router.get(
     verifyAccessToken,
     requieRole([ROLES.DRIVER, ROLES.OPERATIONAL_MANAGER, ROLES.COMPANY_ADMIN, ROLES.ACCOUNTS_MANAGER]),
     getTripExpensesByTripId
+);
+
+router.get("/get-trip-advanceById/:tripId",
+  verifyAccessToken,
+  requieRole([ROLES.COMPANY_ADMIN,ROLES.ACCOUNTS_MANAGER, ROLES.DRIVER]),
+  getTripAdvanceByTripId  
 )
 
 export default router;

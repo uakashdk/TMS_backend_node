@@ -1,232 +1,285 @@
 import { Op } from "sequelize";
-import { Trips, Jobs, Drivers, Vehicles, TripDriverMapping, VehicleDriverAssignment,TripLogs,TripStatus,TripAdvance, POD, Document, TripExpenses } from "../../../modals/index.js";
+import { Trips, Jobs, Drivers, Vehicles, TripDriverMapping, VehicleDriverAssignment, TripLogs, TripStatus, TripAdvance, POD, Document, TripExpenses } from "../../../modals/index.js";
 import { sequelize } from "../../../Config/Db.js";
 
 import { VALID_TRANSITIONS } from "../../../constant/roles.js";
 
 export const createTrip = async (req, res) => {
-    const t = await sequelize.transaction();
-    try {
-        const companyId = req.user.companyId;
-        const operationManagerId = req.user.userId;
+  const t = await sequelize.transaction();
+  try {
+    const companyId = req.user.companyId;
+    const operationManagerId = req.user.userId;
 
-        const {
-            job_id,
-            vehicle_id,
-            primary_driver_id,
-            secondary_driver_id,
-            trip_start_date,
-            expected_delivery_date,
-            route_id,
-            route_summary,
-            total_distance_km
-        } = req.body;
+    const {
+      job_id,
+      vehicle_id,
+      primary_driver_id,
+      secondary_driver_id,
+      trip_start_date,
+      expected_delivery_date,
+      route_id,
+      route_summary,
+      total_distance_km
+    } = req.body;
 
-        /* 1️⃣ Validate Job */
-        const job = await Jobs.findOne({
-            where: {
-                id: job_id,
-                company_id: companyId,
-                jobs_status: {
-                    [Op.notIn]: ["COMPLETED", "CANCELLED"]
-                }
-            }
-        });
-
-        if (!job) {
-            return res.status(400).json({
-                success: false,
-                message: "Invalid or inactive job"
-            });
+    /* 1️⃣ Validate Job */
+    const job = await Jobs.findOne({
+      where: {
+        id: job_id,
+        company_id: companyId,
+        jobs_status: {
+          [Op.notIn]: ["COMPLETED", "CANCELLED"]
         }
-        const driverAssignment = await VehicleDriverAssignment.findOne({
-            where: {
-                driver_id: primary_driver_id,
-                company_id: companyId,
-                is_active: true
-            }
-        });
+      }
+    });
 
-        if (driverAssignment && driverAssignment.vehicle_id !== vehicle_id) {
-            return res.status(400).json({
-                success: false,
-                message: "Driver is already assigned to another vehicle"
-            });
-        }
-
-        const vehicleAssignments = await VehicleDriverAssignment.findAll({
-            where: {
-                vehicle_id,
-                company_id: companyId,
-                is_active: true
-            }
-        });
-
-        if (
-            vehicleAssignments.length > 0 &&
-            !vehicleAssignments.some(a => a.driver_id === primary_driver_id)
-        ) {
-            return res.status(400).json({
-                success: false,
-                message: "Vehicle is already assigned to another driver"
-            });
-        }
-
-
-        /* 2️⃣ Create Trip */
-        const trip = await Trips.create({
-            company_id: companyId,
-            job_id,
-            vehicle_id,
-            operation_manager_id: operationManagerId,
-            trip_start_date,
-            expected_delivery_date,
-            route_id,
-            route_summary,
-            total_distance_km,
-            trip_status: "PLANNED",
-            primary_driver_id: primary_driver_id,
-            secondary_driver_id: secondary_driver_id || null
-        }, { transaction: t });
-
-        /* 3️⃣ Map Primary Driver */
-        await TripDriverMapping.create({
-            trip_id: trip.id,
-            driver_id: primary_driver_id,
-            role: "PRIMARY"
-        }, { transaction: t });
-
-        /* 4️⃣ Map Secondary Driver (optional) */
-        if (secondary_driver_id) {
-            await TripDriverMapping.create({
-                trip_id: trip.id,
-                driver_id: secondary_driver_id,
-                role: "SECONDARY"
-            }, { transaction: t });
-        }
-
-        await t.commit();
-
-        return res.status(201).json({
-            success: true,
-            message: "Trip created and drivers assigned successfully",
-            data: trip
-        });
-
-    } catch (error) {
-        await t.rollback();
-        console.error("Create Trip Error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+    if (!job) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or inactive job"
+      });
     }
+    const driverAssignment = await VehicleDriverAssignment.findOne({
+      where: {
+        driver_id: primary_driver_id,
+        company_id: companyId,
+        is_active: true
+      }
+    });
+
+    if (driverAssignment && driverAssignment.vehicle_id !== vehicle_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Driver is already assigned to another vehicle"
+      });
+    }
+
+    const vehicleAssignments = await VehicleDriverAssignment.findAll({
+      where: {
+        vehicle_id,
+        company_id: companyId,
+        is_active: true
+      }
+    });
+
+    if (
+      vehicleAssignments.length > 0 &&
+      !vehicleAssignments.some(a => a.driver_id === primary_driver_id)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Vehicle is already assigned to another driver"
+      });
+    }
+
+
+    /* 2️⃣ Create Trip */
+    const trip = await Trips.create({
+      company_id: companyId,
+      job_id,
+      vehicle_id,
+      operation_manager_id: operationManagerId,
+      trip_start_date,
+      expected_delivery_date,
+      route_id,
+      route_summary,
+      total_distance_km,
+      trip_status: "PLANNED",
+      primary_driver_id: primary_driver_id,
+      secondary_driver_id: secondary_driver_id || null
+    }, { transaction: t });
+
+    /* 3️⃣ Map Primary Driver */
+    await TripDriverMapping.create({
+      trip_id: trip.id,
+      driver_id: primary_driver_id,
+      role: "PRIMARY"
+    }, { transaction: t });
+
+    /* 4️⃣ Map Secondary Driver (optional) */
+    if (secondary_driver_id) {
+      await TripDriverMapping.create({
+        trip_id: trip.id,
+        driver_id: secondary_driver_id,
+        role: "SECONDARY"
+      }, { transaction: t });
+    }
+
+    await t.commit();
+
+    return res.status(201).json({
+      success: true,
+      message: "Trip created and drivers assigned successfully",
+      data: trip
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.error("Create Trip Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 };
 
 
 export const getAllTrips = async (req, res) => {
-    try {
-        const companyId = req.user.companyId;
+  try {
+    const companyId = req?.user?.companyId;
+    const loggedInUser = req?.user;
 
-        const {
-            job_id,
-            driver_id,
-            vehicle_id,
-            trip_status,
-            start_date,
-            end_date,
-            search,
-            page = 1,
-            limit = 10
-        } = req.query;
+    const roles = loggedInUser?.roleId;
+    const userId = loggedInUser.userId;
 
-        const offset = (page - 1) * limit;
+    const {
+      job_id,
+      driver_id,
+      vehicle_id,
+      trip_status,
+      start_date,
+      end_date,
+      search,
+      page = 1,
+      limit = 10
+    } = req.query;
 
-        /* ---------------- WHERE CONDITION ---------------- */
-        const whereCondition = {
-            company_id: companyId
+    const offset = (page - 1) * limit;
+
+    if (roles === 6) {
+
+      const driver = await Drivers.findOne({
+        where: { user_id: loggedInUser.userId }
+      });
+
+      const whereCondition = {
+        company_id: companyId,
+        primary_driver_id: driver.id
+      };
+      const { rows, count } = await Trips.findAndCountAll({
+        where: whereCondition,
+        include: [
+          {
+            model: Vehicles,
+            as: "vehicle",
+            attributes: ["id", "vehicle_number"]
+          },
+          {
+            model: Drivers,
+            as: "primaryDriver",
+            attributes: ["id", "name"]
+          },
+          {
+            model: Drivers,
+            as: "secondaryDriver",
+            attributes: ["id", "name"],
+            required: false
+          }
+        ],
+        order: [["created_at", "DESC"]],
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Trips fetched successfully",
+        data: rows,
+        pagination: {
+          totalRecords: count,
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(count / limit)
+        }
+      });
+    } else {
+      const whereCondition = {
+        company_id: companyId
+      };
+
+      if (job_id) {
+        whereCondition.job_id = job_id;
+      }
+
+      if (vehicle_id) {
+        whereCondition.vehicle_id = vehicle_id;
+      }
+
+      if (trip_status) {
+        whereCondition.trip_status = trip_status;
+      }
+
+      if (driver_id) {
+        whereCondition[Op.or] = [
+          { primary_driver_id: driver_id },
+          { secondary_driver_id: driver_id }
+        ];
+      }
+
+      if (start_date && end_date) {
+        whereCondition.trip_start_date = {
+          [Op.between]: [start_date, end_date]
         };
+      }
 
-        if (job_id) {
-            whereCondition.job_id = job_id;
+      if (search) {
+        whereCondition.route_summary = {
+          [Op.like]: `%${search}%`
+        };
+      }
+
+      /* ---------------- QUERY ---------------- */
+      const { rows, count } = await Trips.findAndCountAll({
+        where: whereCondition,
+        include: [
+          {
+            model: Jobs,
+            as: "job",
+            attributes: ["id", "goods_type", "pickup_location", "dropoff_location"]
+          },
+          {
+            model: Vehicles,
+            as: "vehicle",
+            attributes: ["id", "vehicle_number"]
+          },
+          {
+            model: Drivers,
+            as: "primaryDriver",
+            attributes: ["id", "name"]
+          },
+          {
+            model: Drivers,
+            as: "secondaryDriver",
+            attributes: ["id", "name"],
+            required: false
+          }
+        ],
+        order: [["created_at", "DESC"]],
+        limit: parseInt(limit),
+        offset: parseInt(offset)
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Trips fetched successfully",
+        data: rows,
+        pagination: {
+          totalRecords: count,
+          currentPage: parseInt(page),
+          totalPages: Math.ceil(count / limit)
         }
-
-        if (vehicle_id) {
-            whereCondition.vehicle_id = vehicle_id;
-        }
-
-        if (trip_status) {
-            whereCondition.trip_status = trip_status;
-        }
-
-        if (driver_id) {
-            whereCondition[Op.or] = [
-                { primary_driver_id: driver_id },
-                { secondary_driver_id: driver_id }
-            ];
-        }
-
-        if (start_date && end_date) {
-            whereCondition.trip_start_date = {
-                [Op.between]: [start_date, end_date]
-            };
-        }
-
-        if (search) {
-            whereCondition.route_summary = {
-                [Op.like]: `%${search}%`
-            };
-        }
-
-        /* ---------------- QUERY ---------------- */
-        const { rows, count } = await Trips.findAndCountAll({
-            where: whereCondition,
-            include: [
-                {
-                    model: Jobs,
-                    as: "job",
-                    attributes: ["id", "goods_type", "pickup_location", "dropoff_location"]
-                },
-                {
-                    model: Vehicles,
-                    as: "vehicle",
-                    attributes: ["id", "vehicle_number"]
-                },
-                {
-                    model: Drivers,
-                    as: "primaryDriver",
-                    attributes: ["id", "name"]
-                },
-                {
-                    model: Drivers,
-                    as: "secondaryDriver",
-                    attributes: ["id", "name"],
-                    required: false
-                }
-            ],
-            order: [["created_at", "DESC"]],
-            limit: parseInt(limit),
-            offset: parseInt(offset)
-        });
-
-        return res.status(200).json({
-            success: true,
-            message: "Trips fetched successfully",
-            data: rows,
-            pagination: {
-                totalRecords: count,
-                currentPage: parseInt(page),
-                totalPages: Math.ceil(count / limit)
-            }
-        });
-
-    } catch (error) {
-        console.error("Get Trips Error:", error);
-        return res.status(500).json({
-            success: false,
-            message: "Internal server error"
-        });
+      });
     }
+
+    /* ---------------- WHERE CONDITION ---------------- */
+
+
+  } catch (error) {
+    console.error("Get Trips Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error"
+    });
+  }
 };
 
 
@@ -444,6 +497,55 @@ export const updateTripStatus = async (req, res) => {
 };
 
 
+export const getTripAdvanceByTripId = async (req, res) => {
+  try {
+    const { tripId } = req.params;
+    const user = req.user;
+
+    if (!tripId) {
+      return res.status(400).json({
+        success: false,
+        message: "Trip ID is required",
+      });
+    }
+
+    // Validate trip ownership
+    const trip = await Trips.findOne({
+      where: {
+        id: tripId,
+        company_id: user.companyId,
+      },
+    });
+
+    if (!trip) {
+      return res.status(404).json({
+        success: false,
+        message: "Trip not found",
+      });
+    }
+
+    // Fetch advance
+    const advance = await TripAdvance.findOne({
+      where: {
+        trip_id: tripId,
+        company_id: user.companyId,
+      },
+    });
+
+    return res.status(200).json({
+      success: true,
+      data: advance || null,
+    });
+  } catch (error) {
+    console.error("Get Trip Advance Error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Internal server error",
+    });
+  }
+};
+
+
 
 export const startTripByDriver = async (req, res) => {
   try {
@@ -535,16 +637,32 @@ export const startTripByDriver = async (req, res) => {
 };
 
 
-
-export const createTripAdvance = async (req, res) => {
+export const upsertTripAdvance = async (req, res) => {
   try {
     const { trip_id, amount, payment_mode, remarks } = req.body;
     const user = req.user; // from auth middleware
 
+    // 1️⃣ Basic validation
+    if (!trip_id) {
+      return res.status(400).json({
+        success: false,
+        message: "Trip ID is required",
+      });
+    }
+
+    if (!amount || amount <= 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Advance amount must be greater than zero",
+      });
+    }
 
     // 2️⃣ Validate trip
     const trip = await Trips.findOne({
-      where: { id: trip_id, company_id: user.companyId },
+      where: {
+        id: trip_id,
+        company_id: user.companyId,
+      },
     });
 
     if (!trip) {
@@ -557,32 +675,37 @@ export const createTripAdvance = async (req, res) => {
     if (["COMPLETED", "CANCELLED"].includes(trip.status)) {
       return res.status(400).json({
         success: false,
-        message: "Advance cannot be given for completed or cancelled trip",
+        message: "Advance cannot be modified for completed or cancelled trip",
       });
     }
 
     // 3️⃣ Check if advance already exists
     const existingAdvance = await TripAdvance.findOne({
-      where: { trip_id },
+      where: {
+        trip_id,
+        company_id: user.companyId,
+      },
     });
 
+    // 4️⃣ UPDATE case
     if (existingAdvance) {
-      return res.status(400).json({
-        success: false,
-        message: "Trip advance already given for this trip",
+      await existingAdvance.update({
+        amount,
+        payment_mode,
+        remarks,
+        updated_by_id: user.userId,
+        updated_at: new Date(),
+      });
+
+      return res.status(200).json({
+        success: true,
+        message: "Trip advance updated successfully",
+        data: existingAdvance,
       });
     }
 
-    // 4️⃣ Validate amount
-    if (!amount || amount <= 0) {
-      return res.status(400).json({
-        success: false,
-        message: "Advance amount must be greater than zero",
-      });
-    }
-
-    // 5️⃣ Create trip advance
-    const advance = await TripAdvance.create({
+    // 5️⃣ CREATE case
+    const newAdvance = await TripAdvance.create({
       company_id: user.companyId,
       trip_id,
       amount,
@@ -596,16 +719,17 @@ export const createTripAdvance = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Trip advance created successfully",
-      data: advance,
+      data: newAdvance,
     });
   } catch (error) {
-    console.error("Create Trip Advance Error:", error);
+    console.error("Upsert Trip Advance Error:", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
     });
   }
 };
+
 
 export const completeTrip = async (req, res) => {
   try {
@@ -623,7 +747,7 @@ export const completeTrip = async (req, res) => {
       },
     });
     console.log("trip.primary_driver_id", trip.primary_driver_id);
-    console.log("driverId======>",driverId);
+    console.log("driverId======>", driverId);
 
     if (!trip) {
       return res.status(404).json({
@@ -898,10 +1022,15 @@ export const createTripExpense = async (req, res) => {
         message: "Required fields are missing",
       });
     }
+    const driver = await Drivers.findOne({
+      where: { user_id: loggedInUser.userId }
+    });
+
+
     const trip = await Trips.findOne({
       where: {
         id: trip_id,
-        primary_driver_id: loggedInUser.userId,
+        primary_driver_id: driver.id,
       },
     });
 

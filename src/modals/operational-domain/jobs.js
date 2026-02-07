@@ -46,6 +46,10 @@ Job.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+      route_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
     jobs_status: {
   type: DataTypes.ENUM(
     'PENDING',

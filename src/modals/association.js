@@ -94,6 +94,16 @@ Companies.hasMany(Jobs, { foreignKey: "company_id", as: "jobs" });
 Jobs.belongsTo(Party, { foreignKey: "customer_id", as: "customer" });
 Party.hasMany(Jobs, { foreignKey: "customer_id", as: "jobs" });
 
+Route.hasMany(Jobs, {
+  foreignKey: "route_id",
+});
+
+Jobs.belongsTo(Route, {
+  foreignKey: "route_id",
+   as: "route"
+});
+
+
 // Admins ↔ Jobs
 Jobs.belongsTo(Admins, {
   foreignKey: "created_by_admin_id",
