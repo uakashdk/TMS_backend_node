@@ -851,16 +851,12 @@ export const createPOD = async (req, res) => {
       receiver_contact,
       remarks,
     } = req.body;
-
-    // 1️⃣ Basic validation
     if (!trip_id) {
       return res.status(400).json({
         success: false,
         message: "Trip ID is required",
       });
     }
-
-    // 2️⃣ Fetch trip and validate driver assignment
     const trip = await Trips.findOne({
       where: {
         id: trip_id,
@@ -873,24 +869,32 @@ export const createPOD = async (req, res) => {
         message: "Trip not found",
       });
     }
+          const userId = req.user.userId;
 
-    // 3️⃣ Ensure only assigned driver can create POD
-    if (trip.primary_driver_id !== req.user.userId) {
+    // ✅ FIX 1: Fetch driver safely
+    const driver = await Drivers.findOne({
+      where: { user_id: userId },
+    });
+
+    // ✅ FIX 2: Validate driver existence
+    if (!driver) {
+      return res.status(403).json({
+        success: false,
+        message: "Driver profile not found for this user",
+      });
+    }
+      if (trip.primary_driver_id !== driver.id) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to submit POD for this trip",
       });
     }
-
-    // 4️⃣ Optional but recommended: prevent POD for completed trip
     if (trip.status === "COMPLETED") {
       return res.status(400).json({
         success: false,
         message: "POD already completed for this trip",
       });
     }
-
-    // 5️⃣ Prevent duplicate POD
     const existingPOD = await POD.findOne({ where: { trip_id } });
     if (existingPOD) {
       return res.status(400).json({

@@ -89,7 +89,7 @@ router.put(
 router.post(
     "/create-pod",
     verifyAccessToken,
-    requieRole([ROLES.DRIVER, ROLES.OPERATIONAL_MANAGER, ROLES.COMPANY_ADMIN]),
+    requieRole([ROLES.DRIVER, ROLES.OPERATIONAL_MANAGER, ROLES.COMPANY_ADMIN,ROLES.ACCOUNTS_MANAGER]),
     validateRequest(PodCreationSchema),
     createPOD
 )
