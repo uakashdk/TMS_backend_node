@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../Config/Db.js";
 
 class Invoice extends Model {}
@@ -20,90 +20,97 @@ Invoice.init(
     company_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'companies',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
 
-    customer_id: {
+    billing_party_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'customers',
-        key: 'id',
-      },
     },
 
-    gr_id: {
-      type: DataTypes.INTEGER,
+    billing_party_name: {
+      type: DataTypes.STRING,
       allowNull: false,
-      references: {
-        model: 'grs', // table name of GR
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
 
-    bill_id: {
+    billing_gst_number: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    billing_address: {
+      type: DataTypes.TEXT,
+      allowNull: false,
+    },
+
+    place_of_supply_state_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'bills',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
 
     invoice_date: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
 
-    total_amount: {
-      type: DataTypes.DECIMAL(10, 2),
+    due_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+
+    financial_year: {
+      type: DataTypes.STRING(9),
       allowNull: false,
     },
 
-    cgst_amount: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+    gst_type: {
+      type: DataTypes.ENUM("IGST", "CGST_SGST"),
+      allowNull: true,
     },
 
-    sgst_amount: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+    is_gst_applicable: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
     },
 
-    igst_amount: {
-      type: DataTypes.DECIMAL(10, 2),
-      allowNull: false,
+    taxable_amount: {
+      type: DataTypes.DECIMAL(12,2),
+      defaultValue: 0,
+    },
+
+    gst_amount: {
+      type: DataTypes.DECIMAL(12,2),
+      defaultValue: 0,
+    },
+
+    round_off: {
+      type: DataTypes.DECIMAL(12,2),
+      defaultValue: 0,
+    },
+
+    net_amount: {
+      type: DataTypes.DECIMAL(12,2),
+      defaultValue: 0,
+    },
+
+    invoice_status: {
+      type: DataTypes.ENUM("DRAFT", "ISSUED", "CANCELLED"),
+      defaultValue: "DRAFT",
+    },
+
+    payment_status: {
+      type: DataTypes.ENUM("UNPAID", "PARTIAL", "PAID"),
+      defaultValue: "UNPAID",
     },
 
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'admins',
-        key: 'id',
-      },
-    },
-
-    status: {
-      type: DataTypes.ENUM('PAID', 'UNPAID', 'OVERDUE'),
-      allowNull: false,
-      defaultValue: 'UNPAID',
     },
   },
   {
     sequelize,
-    modelName: 'Invoice',
-    tableName: 'invoices',
+    tableName: "invoices",
+    modelName: "Invoice",
     timestamps: true,
     underscored: true,
   }

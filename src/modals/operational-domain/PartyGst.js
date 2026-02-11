@@ -48,6 +48,11 @@ PartyGst.init(
       allowNull: false,
       defaultValue: true,
     },
+      is_rcm_applicable: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
   },
   {
     sequelize,

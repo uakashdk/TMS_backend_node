@@ -63,6 +63,10 @@ PartyAddress.init(
       allowNull: false,
       defaultValue: true,
     },
+      city_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
   },
   {
     sequelize,

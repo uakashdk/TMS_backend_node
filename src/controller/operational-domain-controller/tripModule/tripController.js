@@ -870,6 +870,7 @@ export const createPOD = async (req, res) => {
       });
     }
           const userId = req.user.userId;
+          console.log("userId===>",userId)
 
     // ✅ FIX 1: Fetch driver safely
     const driver = await Drivers.findOne({

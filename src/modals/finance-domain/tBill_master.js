@@ -1,9 +1,9 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../Config/Db.js";
 
-class Bill extends Model {}
+class TbillMaster extends Model {}
 
-Bill.init(
+TbillMaster.init(
   {
     id: {
       type: DataTypes.INTEGER,
@@ -19,68 +19,116 @@ Bill.init(
 
     bill_date: {
       type: DataTypes.DATEONLY,
-      allowNull: false,
       defaultValue: DataTypes.NOW,
     },
 
     company_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'companies',
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
 
     gr_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'grs', // table name of GR
-        key: 'id',
-      },
-      onUpdate: 'CASCADE',
-      onDelete: 'CASCADE',
     },
 
-    total_amount: {
-      type: DataTypes.DECIMAL(10, 2),
+    invoice_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+
+    bill_type: {
+      type: DataTypes.ENUM(
+        "NORMAL",
+        "SUPPLEMENTARY",
+        "DEBIT",
+        "CREDIT"
+      ),
+      defaultValue: "NORMAL",
+    },
+
+    billing_party_id: {
+      type: DataTypes.INTEGER,
       allowNull: false,
+    },
+
+    billing_party_gst_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+    },
+
+    taxable_amount: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+
+    gst_amount: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+
+    other_charges_amount: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+
+    net_amount: {
+      type: DataTypes.DECIMAL(12, 2),
+      defaultValue: 0,
+    },
+
+    is_gst_applicable: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    },
+
+    gst_type: {
+      type: DataTypes.ENUM("IGST", "CGST_SGST"),
+      allowNull: true,
+    },
+
+    financial_year: {
+      type: DataTypes.STRING(9),
+      allowNull: false,
+    },
+
+    due_date: {
+      type: DataTypes.DATEONLY,
+      allowNull: true,
+    },
+
+    bill_status: {
+      type: DataTypes.ENUM("DRAFT", "POSTED", "CANCELLED"),
+      defaultValue: "DRAFT",
+    },
+
+    remarks: {
+      type: DataTypes.TEXT,
+      allowNull: true,
     },
 
     created_by: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: {
-        model: 'admins',
-        key: 'id',
-      },
     },
 
     updated_by: {
       type: DataTypes.INTEGER,
       allowNull: true,
-      references: {
-        model: 'admins',
-        key: 'id',
-      },
     },
-
-    status: {
-      type: DataTypes.ENUM('PENDING', 'APPROVED', 'PAID'),
+      is_final: {
+      type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: 'PENDING',
+      defaultValue: true,
     },
   },
   {
     sequelize,
-    modelName: 'Bill',
-    tableName: 'bills',
+    tableName: "bills",
+    modelName: "TbillMaster",
     timestamps: true,
     underscored: true,
   }
 );
 
-export default Bill;
+export default TbillMaster;

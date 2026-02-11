@@ -232,6 +232,15 @@ Drivers.hasMany(TripDriverMapping, {
   as: "trip_assignments",
 });
 
+Trips.belongsTo(Party, {
+  foreignKey: "consignor_id",
+  as: "consignor",
+});
+
+Trips.belongsTo(Party, {
+  foreignKey: "consignee_id",
+  as: "consignee",
+});
 // Trip ↔ Logs
 TripLogs.belongsTo(Trips, { foreignKey: "trip_id", as: "trip" });
 Trips.hasMany(TripLogs, { foreignKey: "trip_id", as: "logs" });
@@ -300,6 +309,49 @@ GrMaster.belongsTo(Trips, { foreignKey: "trip_id", as: "trip" });
 GrMaster.hasMany(TbillMaster, { foreignKey: "gr_id", as: "bills" });
 TbillMaster.belongsTo(GrMaster, { foreignKey: "gr_id", as: "gr" });
 
+// Trip
+
+// Company
+GrMaster.belongsTo(Companies, {
+  foreignKey: "company_id",
+  as: "company",
+});
+
+// Parties
+GrMaster.belongsTo(Party, {
+  foreignKey: "customer_id",
+  as: "customer",
+});
+
+GrMaster.belongsTo(Party, {
+  foreignKey: "consignor_id",
+  as: "consignor",
+});
+
+GrMaster.belongsTo(Party, {
+  foreignKey: "consignee_id",
+  as: "consignee",
+});
+
+// Addresses
+GrMaster.belongsTo(PartyAddress, {
+  foreignKey: "from_address_id",
+  as: "fromAddress",
+});
+
+GrMaster.belongsTo(PartyAddress, {
+  foreignKey: "to_address_id",
+  as: "toAddress",
+});
+
+// GST Snapshot
+GrMaster.belongsTo(PartyGst, {
+  foreignKey: "billing_party_gst_id",
+  as: "billingGst",
+});
+
+
+
 // Invoice ↔ Bills (ONE INVOICE → MANY BILLS)
 Invoices.hasMany(TbillMaster, {
   foreignKey: "invoice_id",
@@ -333,4 +385,28 @@ Invoices.hasMany(Payment, { foreignKey: "invoice_id", as: "payments" });
 Payment.belongsTo(Invoices, {
   foreignKey: "invoice_id",
   as: "invoice",
+});
+
+
+// GR
+
+
+
+
+// Company
+TbillMaster.belongsTo(Companies, {
+  foreignKey: "company_id",
+  as: "company",
+});
+
+// Party
+TbillMaster.belongsTo(Party, {
+  foreignKey: "billing_party_id",
+  as: "billingParty",
+});
+
+// GST Snapshot
+TbillMaster.belongsTo(PartyGst, {
+  foreignKey: "billing_party_gst_id",
+  as: "billingGst",
 });

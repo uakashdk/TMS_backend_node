@@ -50,6 +50,18 @@ Trip.init(
       type: DataTypes.DATEONLY,
       allowNull: true,
     },
+     consignor_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Party who dispatches the goods",
+    },
+
+    // ✅ NEW: Consignee
+    consignee_id: {
+      type: DataTypes.INTEGER,
+      allowNull: true,
+      comment: "Party who receives the goods",
+    },
 
     route_summary: {
       type: DataTypes.STRING,

@@ -38,6 +38,18 @@ Job.init(
       type: DataTypes.STRING,
       allowNull: false,
     },
+     is_party_advance_required: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
+
+    // 🔹 NEW: Whether advance is actually received
+    is_party_advance_received: {
+      type: DataTypes.BOOLEAN,
+      allowNull: false,
+      defaultValue: false,
+    },
     pickup_location: {
       type: DataTypes.STRING,
       allowNull: false,
