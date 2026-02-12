@@ -42,11 +42,10 @@ import GpsLocation from "./operational-domain/gps_location.js";
 import GeoFence from "./operational-domain/geo_fence.js";
 import VehicleDriverAssignment from "../modals/operational-domain/VehicleDriverAssignment.js";
 import TripAdvance from "./operational-domain/tripAdvance.js";
-
-/* 🔥 THIS IS THE MISSING LINE 🔥 */
+import PartyAdvance from "./finance-domain/PartyAdvance.js";
+import InvoiceAdvanceAdjustment from "./finance-domain/InvoiceAdvanceAdjustment.js";
 import "./association.js";
 
-/* ✅ SINGLE EXPORT POINT */
 export {
   Admins,
   Party,
@@ -84,5 +83,7 @@ export {
   GpsLocation,
   GeoFence,
   VehicleDriverAssignment,
-  TripAdvance
+  TripAdvance,
+  InvoiceAdvanceAdjustment,
+  PartyAdvance
 };

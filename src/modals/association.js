@@ -33,7 +33,9 @@ import {
   GpsLocation,
   GeoFence,
   VehicleDriverAssignment,
-  TripAdvance
+  TripAdvance,
+  PartyAdvance,
+  InvoiceAdvanceAdjustment
 } from "./index.js";
 
 /* ===========================
@@ -180,6 +182,18 @@ VehicleDriverAssignment.belongsTo(Drivers, {
 });
 
 
+// Invoice ↔ InvoiceAdvanceAdjustment
+
+Invoices.hasMany(InvoiceAdvanceAdjustment, {
+  foreignKey: "invoice_id",
+  as: "advanceAdjustments",
+});
+
+InvoiceAdvanceAdjustment.belongsTo(Invoices, {
+  foreignKey: "invoice_id",
+  as: "invoice",
+});
+
 
 
 
@@ -196,6 +210,18 @@ Companies.hasMany(Drivers, { foreignKey: "company_id", as: "drivers" });
 // Trips ↔ Jobs
 Trips.belongsTo(Jobs, { foreignKey: "job_id", as: "job" });
 Jobs.hasMany(Trips, { foreignKey: "job_id", as: "trips" });
+Jobs.hasMany(PartyAdvance, {
+  foreignKey: "job_id",
+  as: "advances",
+});
+
+Jobs.belongsTo(Admins, {
+  foreignKey: "created_by_admin_id",
+  as: "createdBy",
+});
+
+
+
 
 // Trips ↔ Routes
 Trips.belongsTo(Route, { foreignKey: "route_id", as: "route" });
@@ -410,3 +436,37 @@ TbillMaster.belongsTo(PartyGst, {
   foreignKey: "billing_party_gst_id",
   as: "billingGst",
 });
+
+
+// PartyAdvance
+PartyAdvance.belongsTo(Companies, {
+  foreignKey: "company_id",
+  as: "company",
+});
+
+PartyAdvance.belongsTo(Party, {
+  foreignKey: "party_id",
+  as: "party",
+});
+
+PartyAdvance.belongsTo(Jobs, {
+  foreignKey: "job_id",
+  as: "job",
+});
+
+PartyAdvance.belongsTo(Admins, {
+  foreignKey: "created_by",
+  as: "createdBy",
+});
+
+PartyAdvance.hasMany(InvoiceAdvanceAdjustment, {
+  foreignKey: "party_advance_id",
+  as: "invoiceAdjustments",
+});
+
+InvoiceAdvanceAdjustment.belongsTo(PartyAdvance, {
+  foreignKey: "party_advance_id",
+  as: "partyAdvance",
+});
+
+
