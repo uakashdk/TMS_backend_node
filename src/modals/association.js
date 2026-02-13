@@ -35,7 +35,8 @@ import {
   VehicleDriverAssignment,
   TripAdvance,
   PartyAdvance,
-  InvoiceAdvanceAdjustment
+  InvoiceAdvanceAdjustment,
+  RateContract
 } from "./index.js";
 
 /* ===========================
@@ -469,4 +470,49 @@ InvoiceAdvanceAdjustment.belongsTo(PartyAdvance, {
   as: "partyAdvance",
 });
 
+
+// RateContract Associations
+
+RateContract.belongsTo(Companies, {
+  foreignKey: "company_id",
+  as: "company",
+});
+
+Companies.hasMany(RateContract, {
+  foreignKey: "company_id",
+  as: "rateContracts",
+});
+
+
+RateContract.belongsTo(Party, {
+  foreignKey: "party_id",
+  as: "party",
+});
+
+Party.hasMany(RateContract, {
+  foreignKey: "party_id",
+  as: "rateContracts",
+});
+
+
+RateContract.belongsTo(Route, {
+  foreignKey: "route_id",
+  as: "route",
+});
+
+Route.hasMany(RateContract, {
+  foreignKey: "route_id",
+  as: "rateContracts",
+});
+
+
+RateContract.belongsTo(Admins, {
+  foreignKey: "created_by",
+  as: "creator",
+});
+
+RateContract.belongsTo(Admins, {
+  foreignKey: "updated_by",
+  as: "updater",
+});
 

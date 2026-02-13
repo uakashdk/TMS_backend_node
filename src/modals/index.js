@@ -44,6 +44,7 @@ import VehicleDriverAssignment from "../modals/operational-domain/VehicleDriverA
 import TripAdvance from "./operational-domain/tripAdvance.js";
 import PartyAdvance from "./finance-domain/PartyAdvance.js";
 import InvoiceAdvanceAdjustment from "./finance-domain/InvoiceAdvanceAdjustment.js";
+import RateContract from "./finance-domain/RateContract.js";
 import "./association.js";
 
 export {
@@ -85,5 +86,6 @@ export {
   VehicleDriverAssignment,
   TripAdvance,
   InvoiceAdvanceAdjustment,
-  PartyAdvance
+  PartyAdvance,
+  RateContract
 };

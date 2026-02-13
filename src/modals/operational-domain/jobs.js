@@ -1,4 +1,4 @@
-import { DataTypes, Model } from 'sequelize';
+import { DataTypes, FLOAT, Model } from 'sequelize';
 import { sequelize } from "../../Config/Db.js";
 
 class Job extends Model {}
@@ -61,6 +61,39 @@ Job.init(
       route_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
+    },
+    rate_contract_id:{
+      type:DataTypes.INTEGER,
+      allowNull:true,
+    },
+    rate_type:{
+      type:DataTypes.STRING,
+      allowNull:false,
+
+    },
+    rate_value:{
+      type:DataTypes.DOUBLE,
+      allowNull:false,
+    },
+    freight_amount:{
+      type:DataTypes.DOUBLE,
+      allowNull:false
+    },
+    freight_basis_value:{
+      type:DataTypes.DOUBLE,
+      allowNull:true
+    },
+    commercial_snapshot:{
+      type:DataTypes.JSON,
+      allowNull:true
+    },
+    created_by:{
+       type:DataTypes.BIGINT,
+       allowNull:true,
+    },
+    updated_by:{
+     type:DataTypes.INTEGER,
+     allowNull:true,
     },
     jobs_status: {
   type: DataTypes.ENUM(
