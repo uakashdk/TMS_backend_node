@@ -45,6 +45,7 @@ import TripAdvance from "./operational-domain/tripAdvance.js";
 import PartyAdvance from "./finance-domain/PartyAdvance.js";
 import InvoiceAdvanceAdjustment from "./finance-domain/InvoiceAdvanceAdjustment.js";
 import RateContract from "./finance-domain/RateContract.js";
+import PaymentSnap from "./finance-domain/PaymentSnap.js";
 import "./association.js";
 
 export {
@@ -87,5 +88,6 @@ export {
   TripAdvance,
   InvoiceAdvanceAdjustment,
   PartyAdvance,
-  RateContract
+  RateContract,
+  PaymentSnap
 };

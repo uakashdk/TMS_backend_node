@@ -12,7 +12,7 @@ import JobRoutes from "./routes/operational-domain-routes/job-module/jobControll
 import TripRoutes from "./routes/operational-domain-routes/trip-module/tripControllerRoutes.js";
 import PartyAdvanceRoutes from "./routes/operational-domain-routes/Party-Advance/partyAdvanceRoutes.js";
 import RateContractRoutes from "./routes/finance-domain-routes/rate-contract-module/RateContractRoutes.js";
-
+import PaymentSnapsRoutes from "./routes/finance-domain-routes/payment-snaps-module/PaymentSnapRoutes.js";
 import cookieParser from 'cookie-parser';
 import VehicleMappingDriverRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleMappingDriverRoutes.js";
 import cors from "cors"
@@ -57,6 +57,7 @@ app.use("/api/v1/fleetlio/jobs",JobRoutes);
 app.use("/api/v1/fleetlio/trips",TripRoutes);
 app.use("/api/v1/fleetlio/partyAdvance",PartyAdvanceRoutes);
 app.use("/api/v1/fleetlio/rateContract",RateContractRoutes);
+app.use("/api/v1/fleetlio/paymentSnaps",PaymentSnapsRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

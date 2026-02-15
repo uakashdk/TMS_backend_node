@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from "../../Config/Db.js";
 
-class Trip extends Model {}
+class Trip extends Model { }
 
 Trip.init(
   {
@@ -50,7 +50,7 @@ Trip.init(
       type: DataTypes.DATEONLY,
       allowNull: true,
     },
-     consignor_id: {
+    consignor_id: {
       type: DataTypes.INTEGER,
       allowNull: true,
       comment: "Party who dispatches the goods",
@@ -93,6 +93,12 @@ Trip.init(
       type: DataTypes.DATE,
       allowNull: true,
     },
+    goods_qty: {
+      type: DataTypes.DECIMAL(12, 2),
+      allowNull: false,
+      defaultValue: 0.00,
+    },
+
   },
   {
     sequelize,

@@ -19,9 +19,11 @@ export const createTrip = async (req, res) => {
       expected_delivery_date,
       route_id,
       route_summary,
-      total_distance_km
+      total_distance_km,
+      goods_qty
     } = req.body;
 
+    /* 1️⃣ Validate Job */
     /* 1️⃣ Validate Job */
     const job = await Jobs.findOne({
       where: {
@@ -37,6 +39,14 @@ export const createTrip = async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "Invalid or inactive job"
+      });
+    }
+
+    /* 🔒 Advance Validation Rule */
+    if (job.is_party_advance_required && !job.is_party_advance_received) {
+      return res.status(400).json({
+        success: false,
+        message: "Trip cannot be created. Party advance is pending."
       });
     }
     const driverAssignment = await VehicleDriverAssignment.findOne({
@@ -86,7 +96,8 @@ export const createTrip = async (req, res) => {
       total_distance_km,
       trip_status: "PLANNED",
       primary_driver_id: primary_driver_id,
-      secondary_driver_id: secondary_driver_id || null
+      secondary_driver_id: secondary_driver_id || null,
+      goods_qty
     }, { transaction: t });
 
     /* 3️⃣ Map Primary Driver */
@@ -416,37 +427,44 @@ export const updateTrip = async (req, res) => {
 
 
 export const updateTripStatus = async (req, res) => {
+  const t = await sequelize.transaction();
+
   try {
     const companyId = req.user.companyId;
+    const userId = req.user.userId;
+    const roleId = req.user.roleId;
     const { id } = req.params;
     const { status } = req.body;
 
     // 1️⃣ Check trip exists
     const trip = await Trips.findOne({
       where: { id, company_id: companyId },
+      transaction: t
     });
 
     if (!trip) {
+      await t.rollback();
       return res.status(404).json({
         success: false,
         message: "Trip not found",
       });
     }
 
-    // 2️⃣ Validate status transition
     const currentStatus = trip.trip_status;
 
+    // 2️⃣ Validate status transition
     if (
       !VALID_TRANSITIONS[currentStatus] ||
       !VALID_TRANSITIONS[currentStatus].includes(status)
     ) {
+      await t.rollback();
       return res.status(400).json({
         success: false,
         message: `Invalid status transition from ${currentStatus} to ${status}`,
       });
     }
 
-    // 3️⃣ Update Trip table
+    // 3️⃣ Update Trip
     const updatePayload = { trip_status: status };
 
     if (status === "STARTED") {
@@ -457,25 +475,83 @@ export const updateTripStatus = async (req, res) => {
       updatePayload.completed_at = new Date();
     }
 
-    await trip.update(updatePayload);
+    await trip.update(updatePayload, { transaction: t });
 
-    // 4️⃣ Insert TripStatus history
+    // 4️⃣ Fetch related Job
+    const job = await Jobs.findOne({
+      where: {
+        id: trip.job_id,
+        company_id: companyId
+      },
+      transaction: t
+    });
+
+    if (!job) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Related job not found",
+      });
+    }
+
+    // 5️⃣ Job status sync logic
+
+    // If trip started → job becomes IN_PROGRESS
+    if (status === "STARTED") {
+      await job.update(
+        { jobs_status: "IN_PROGRESS" },
+        { transaction: t }
+      );
+    }
+
+    // If trip completed → calculate delivered quantity
+    if (status === "COMPLETED") {
+
+      const completedTrips = await Trips.findAll({
+        where: {
+          job_id: trip.job_id,
+          trip_status: "COMPLETED"
+        },
+        transaction: t
+      });
+
+      const totalDelivered = completedTrips.reduce(
+        (sum, t) => sum + Number(t.goods_qty),
+        0
+      );
+
+      if (totalDelivered >= Number(job.goods_quantity)) {
+        await job.update(
+          { jobs_status: "COMPLETED" },
+          { transaction: t }
+        );
+      } else {
+        await job.update(
+          { jobs_status: "IN_PROGRESS" },
+          { transaction: t }
+        );
+      }
+    }
+
+    // 6️⃣ Insert TripStatus history
     await TripStatus.create({
       trip_id: trip.id,
       status,
-      updated_by: req.user.userId || req.user.userId,
-    });
+      updated_by: userId,
+    }, { transaction: t });
 
-    // 5️⃣ Insert TripLog (audit)
+    // 7️⃣ Insert TripLog
     await TripLogs.create({
       company_id: companyId,
       trip_id: trip.id,
       log_type: "STATUS_CHANGE",
       log_message: `Trip status changed from ${currentStatus} to ${status}`,
       logged_at: new Date(),
-      logged_by_role: req.user.roleId || req.user.roleId,
-      logged_by_id: req.user.userId || req.user.userId,
-    });
+      logged_by_role: roleId,
+      logged_by_id: userId,
+    }, { transaction: t });
+
+    await t.commit();
 
     return res.status(200).json({
       success: true,
@@ -488,7 +564,9 @@ export const updateTripStatus = async (req, res) => {
     });
 
   } catch (error) {
+    await t.rollback();
     console.error("Update Trip Status Error:", error);
+
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -869,8 +947,8 @@ export const createPOD = async (req, res) => {
         message: "Trip not found",
       });
     }
-          const userId = req.user.userId;
-          console.log("userId===>",userId)
+    const userId = req.user.userId;
+    console.log("userId===>", userId)
 
     // ✅ FIX 1: Fetch driver safely
     const driver = await Drivers.findOne({
@@ -884,7 +962,7 @@ export const createPOD = async (req, res) => {
         message: "Driver profile not found for this user",
       });
     }
-      if (trip.primary_driver_id !== driver.id) {
+    if (trip.primary_driver_id !== driver.id) {
       return res.status(403).json({
         success: false,
         message: "You are not authorized to submit POD for this trip",

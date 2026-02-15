@@ -1,4 +1,4 @@
-import { Jobs,Party, Route, Trips } from "../../../modals/index.js";
+import { Jobs, Party, Route, Trips } from "../../../modals/index.js";
 import { Op } from "sequelize";
 import { sequelize } from "../../../Config/Db.js";
 
@@ -17,8 +17,12 @@ export const createJob = async (req, res) => {
       pickup_location,
       dropoff_location,
       route_id,
+      is_party_advance_required
     } = req.body;
 
+
+    let advanceRequired = Boolean(is_party_advance_required);
+      const advanceReceived = !advanceRequired;// Always false at creation
     const existingJob = await Jobs.findOne({
       where: {
         company_id: companyId,
@@ -48,7 +52,12 @@ export const createJob = async (req, res) => {
         quantity_units,
         pickup_location,
         dropoff_location,
-        route_id
+        route_id,
+        is_party_advance_required: advanceRequired,
+        is_party_advance_received: advanceReceived,
+
+        created_by: adminId,
+        updated_by: adminId,
       },
       { transaction: t }
     );
@@ -193,7 +202,7 @@ export const getJobsDropdown = async (req, res) => {
 
     const whereCondition = {
       company_id: companyId,
-    //   jobs_status: "PENDING", // only jobs without trip
+      //   jobs_status: "PENDING", // only jobs without trip
     };
 
     if (search) {
@@ -220,9 +229,9 @@ export const getJobsDropdown = async (req, res) => {
           attributes: ["id", "party_name"],
         },
         {
-          model:Route,
-           as: "route",
-          attributes:["id","route_name"]
+          model: Route,
+          as: "route",
+          attributes: ["id", "route_name"]
         }
       ],
       order: [["job_date", "ASC"]],
@@ -258,8 +267,9 @@ export const updateJob = async (req, res) => {
       pickup_location,
       dropoff_location,
       route_id,
+      is_party_advance_required
     } = req.body;
-     console.log("route_id:======>",route_id)
+
     const job = await Jobs.findOne({
       where: {
         id: jobId,
@@ -276,6 +286,16 @@ export const updateJob = async (req, res) => {
       });
     }
 
+
+    if (status !== undefined) {
+      updatePayload.status = status;
+
+      if (status === false) {
+        updatePayload.jobs_status = "CANCELLED";
+      }
+    }
+
+
     const updatePayload = {
       status,
       job_date,
@@ -291,6 +311,11 @@ export const updateJob = async (req, res) => {
     if (status === 0) {
       updatePayload.jobs_status = "CANCELLED";
     }
+
+    if (is_party_advance_required === false) {
+      updatePayload.is_party_advance_received = false;
+    }
+
 
     await job.update(updatePayload, { transaction: t });
 
