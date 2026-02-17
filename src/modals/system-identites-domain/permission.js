@@ -21,12 +21,21 @@ Permission.init(
         type: DataTypes.STRING,
         allowNull: true,    
     },
+
+      module_name: {
+        type: DataTypes.STRING(100),
+        allowNull: false, // vehicle
+      },
+      action: {
+        type: DataTypes.STRING(100),
+        allowNull: false, // create, view, update
+      },
   },
   { 
     sequelize,
     modelName: 'Permission',
     tableName: 'permissions',
-    timestamps: false,
+    timestamps: true,
   }
 );
 

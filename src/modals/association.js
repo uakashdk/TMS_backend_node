@@ -36,7 +36,8 @@ import {
   TripAdvance,
   PartyAdvance,
   InvoiceAdvanceAdjustment,
-  RateContract
+  RateContract,
+  UserPermissionMapping
 } from "./index.js";
 
 /* ===========================
@@ -50,6 +51,17 @@ Roles.hasMany(Admins, { foreignKey: "role_id", as: "admins" });
 // Admins ↔ Companies
 Admins.belongsTo(Companies, { foreignKey: "company_id", as: "company" });
 Companies.hasMany(Admins, { foreignKey: "company_id", as: "admins" });
+
+UserPermissionMapping.belongsTo(Admins, {
+  foreignKey: "user_id",
+  onDelete: "CASCADE",
+});
+
+UserPermissionMapping.belongsTo(Permissions, {
+  foreignKey: "permission_id",
+  onDelete: "CASCADE",
+});
+
 
 // Roles ↔ Permissions
 Roles.belongsToMany(Permissions, {

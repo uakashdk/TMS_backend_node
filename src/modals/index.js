@@ -46,6 +46,7 @@ import PartyAdvance from "./finance-domain/PartyAdvance.js";
 import InvoiceAdvanceAdjustment from "./finance-domain/InvoiceAdvanceAdjustment.js";
 import RateContract from "./finance-domain/RateContract.js";
 import PaymentSnap from "./finance-domain/PaymentSnap.js";
+import UserPermissionMapping from "./system-identites-domain/user-permission-mapping.js"
 import "./association.js";
 
 export {
@@ -89,5 +90,6 @@ export {
   InvoiceAdvanceAdjustment,
   PartyAdvance,
   RateContract,
-  PaymentSnap
+  PaymentSnap,
+  UserPermissionMapping
 };

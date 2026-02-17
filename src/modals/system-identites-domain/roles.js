@@ -10,7 +10,10 @@ Role.init(
       primaryKey: true,
       autoIncrement: true,
     },
-
+        company_id: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+      },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
@@ -26,7 +29,7 @@ Role.init(
     sequelize,
     modelName: "Role",
     tableName: "roles",
-    timestamps: false,
+    timestamps: true,
   }
 );
 

@@ -17,7 +17,13 @@ export const createJob = async (req, res) => {
       pickup_location,
       dropoff_location,
       route_id,
-      is_party_advance_required
+      is_party_advance_required,
+      rate_contract_id,
+      rate_type,
+      rate_value,
+      freight_amount,
+      freight_basis_value,
+      commercial_snapshot
     } = req.body;
 
 
@@ -55,9 +61,15 @@ export const createJob = async (req, res) => {
         route_id,
         is_party_advance_required: advanceRequired,
         is_party_advance_received: advanceReceived,
-
+        rate_contract_id,
+        rate_type,
+        rate_value,
+        freight_amount,
+        freight_basis_value,
+        commercial_snapshot,
         created_by: adminId,
         updated_by: adminId,
+
       },
       { transaction: t }
     );

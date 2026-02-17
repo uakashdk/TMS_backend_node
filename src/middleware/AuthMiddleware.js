@@ -20,6 +20,7 @@ const verifyAccessToken = (req, res, next) => {
       userId: decoded.userId,
       roleId: decoded.roleId,
       companyId: decoded.companyId,
+      permissions: decoded.permissions || [], // 🔥 Important
     };
 
     next();

@@ -12,6 +12,7 @@ export const loginAdmin = async (req, res) => {
     if (!email || !password) {
       return res.status(400).json({ message: "Email and password are required" });
     }
+
     const admins = await sequelize.query(
       `SELECT 
         a.id,
@@ -58,6 +59,7 @@ export const loginAdmin = async (req, res) => {
         userId: admin.id,
         roleId: admin.role_id,
         companyId: admin.company_id || null,
+        permissions: permissionList,   // 🔥 Added here
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" }
@@ -72,8 +74,8 @@ export const loginAdmin = async (req, res) => {
     );
     res.cookie("refreshToken", refreshToken, {
       httpOnly: true,
-      secure: false,        // true in production (HTTPS)
-      sameSite: "lax",      // 🔥 FIXED (NOT strict)
+      secure: false, // true in production (HTTPS)
+      sameSite: "lax",
       maxAge: 7 * 24 * 60 * 60 * 1000,
     });
     return res.status(200).json({

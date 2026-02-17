@@ -1,5 +1,5 @@
 import { Op } from "sequelize";
-import { Trips, Jobs, Drivers, Vehicles, TripDriverMapping, VehicleDriverAssignment, TripLogs, TripStatus, TripAdvance, POD, Document, TripExpenses } from "../../../modals/index.js";
+import { Trips, Jobs, Drivers, Vehicles, TripDriverMapping, VehicleDriverAssignment, TripLogs, TripStatus, TripAdvance, POD, Document, TripExpenses, PaymentSnap } from "../../../modals/index.js";
 import { sequelize } from "../../../Config/Db.js";
 
 import { VALID_TRANSITIONS } from "../../../constant/roles.js";
@@ -609,10 +609,19 @@ export const getTripAdvanceByTripId = async (req, res) => {
         company_id: user.companyId,
       },
     });
+    const PaymentSlips = await PaymentSnap.findAll({
+      where :{entity_id:tripId, entity_type:"TripAdvance"},
+      attributes:["id","company_id","entity_type","entity_id","snap_number","amount","flow_direction","payment_mode","payment_date"],
+  })
+
+  const URL = process.env.local_URL;
 
     return res.status(200).json({
       success: true,
+      message:"TripAdvance  fetched",
       data: advance || null,
+      PaymentSlips,
+      URL
     });
   } catch (error) {
     console.error("Get Trip Advance Error:", error);
@@ -1214,20 +1223,12 @@ export const getTripExpensesByTripId = async (req, res) => {
     // 2️⃣ Fetch documents for each expense
     const expenseIds = expenses.map((exp) => exp.id);
 
-    const documents = await Document.findAll({
+    const documents = await PaymentSnap.findAll({
       where: {
         entity_type: "TRIP_EXPENSE",
         entity_id: expenseIds,
       },
-      attributes: [
-        "id",
-        "entity_id",
-        "document_group",
-        "document_type",
-        "file_url",
-        "content",
-        "status",
-      ],
+      attributes:["id","company_id","entity_type","entity_id","snap_number","amount","flow_direction","payment_mode","payment_date"],
     });
 
     // 3️⃣ Map documents to respective expenses
