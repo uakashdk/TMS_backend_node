@@ -5,12 +5,14 @@ import {assignDriverToVehicleSchema, unassignDriverFromVehicleSchema,getCurrentV
 import verifyAccessToken from "../../../middleware/verifyAccessToken.js";
 import validateRequest from "../../../middleware/validationRequest.js";
 import {ROLES} from "../../../constant/roles.js";
+import { requirePermission } from "../../../middleware/requirePermission.js";
+import { Permission } from "../../../constant/Permission.js";
 const router = express.Router();
 
 
-router.post("/create-vehicle-assignment",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),validateRequest(assignDriverToVehicleSchema),assignDriverToVehicle);
+router.post("/create-vehicle-assignment",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.AssignDriverToVehicle),validateRequest(assignDriverToVehicleSchema),assignDriverToVehicle);
 
-router.post("/unassign-vehicle-assignment",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),validateRequest(unassignDriverFromVehicleSchema),unassignDriverFromVehicle);
+router.post("/unassign-vehicle-assignment",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.AssignDriverToVehicle),validateRequest(unassignDriverFromVehicleSchema),unassignDriverFromVehicle);
 
 router.get("/get-current-vehicle-ofADriver/:driverId",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),validateRequest(getCurrentVehicleOfDriverSchema),getCurrentVehicleOfDriver);
 

@@ -174,6 +174,7 @@ export const refreshAccessToken = async (req, res) => {
         userId: admin.id,
         roleId: admin.role_id,
         companyId: admin.company_id || null,
+        permissions:permissionList
       },
       process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "15m" }

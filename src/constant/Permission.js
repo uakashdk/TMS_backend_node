@@ -46,6 +46,7 @@ export const Permission = {
     },
      VEHICLEDRIVERASSIGN:{
         AssignDriverToVehicle:"assign_driver_to_vehicle",
+        
         ViewAssignmentHistory:"view_vehicle_driver_assignment_history",
         ViewVehicleToDriver:"view_vehicle_driver_assignment",
         ViewCurrentVehicleToDriver:"view_current_vehicle_driver",
@@ -74,5 +75,11 @@ export const Permission = {
      },
      DASHBOARD:{
         ViewDashboard:"view_dashboard"
+     },
+     DOCUMENT:{
+        UploadDOCS:"upload_docs",
+        VerifyDocs:"verify_docs",
+        DocumentStatus:"documentStatus",
+        DocumentUser:"documentUsers"
      }
 };

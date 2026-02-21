@@ -6,11 +6,13 @@ import { uploadDocument,verifyDocument,documentStatusVerification } from "../../
 import upload from "../../middleware/uploadMiddleware.js"; // multer config
 import multerErrorHandler from "../../middleware/multerErrorHandler.js";
 import requireSuperAdmin from "../../middleware/requireSuperAdmin.js";
+import { requirePermission } from "../../middleware/requirePermission.js";
+import { Permission } from "../../constant/Permission.js";
 const router = express.Router();
 router.post(
   "/upload",
   verifyAccessToken,
-  requireRole([ROLES.SUPER_ADMIN, ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
+   requirePermission(Permission.DOCUMENT.UploadDOCS),
   upload.single("document"),
   multerErrorHandler,
   uploadDocument
@@ -20,10 +22,11 @@ router.patch(
   "/verify/:documentId",
   verifyAccessToken,
   requireRole([ROLES.SUPER_ADMIN]),
+  requirePermission(Permission.DOCUMENT.VerifyDocs),
   verifyDocument
 );
  
-router.post("/documentStatus/:documentId",verifyAccessToken,requireSuperAdmin,documentStatusVerification)
+router.post("/documentStatus/:documentId",verifyAccessToken,requireSuperAdmin,requirePermission(Permission.DOCUMENT.DocumentStatus),documentStatusVerification)
 
 router.post("/documentUsers/:documentId",verifyAccessToken,documentStatusVerification)
 

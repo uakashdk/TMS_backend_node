@@ -67,6 +67,7 @@ export const getAllRateContracts = async (req, res) => {
 
     const whereCondition = {
       company_id: req.user.companyId,
+      is_active:true
     };
 
     // Filter by party
