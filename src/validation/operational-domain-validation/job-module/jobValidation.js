@@ -14,7 +14,13 @@ export const createJobSchema = Joi.object({
   pickup_location: Joi.string().trim().required(),
 
   dropoff_location: Joi.string().trim().required(),
-  route_id: Joi.number().integer().required(),
+  route_id: Joi.number().required(),
+  is_party_advance_required: Joi.boolean().required(),
+  rate_contract_id:Joi.number().required(),
+  rate_type: Joi.string().required(),
+  rate_value:Joi.number().required(),
+  freight_amount:Joi.number().required(),
+  freight_basis_value:Joi.number().required()
 });
 
 

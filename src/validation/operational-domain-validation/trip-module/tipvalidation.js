@@ -11,7 +11,8 @@ export const createTripSchema = Joi.object({
     expected_delivery_date: Joi.date().optional().allow(null),
     route_summary: Joi.string().required(),
     route_id: Joi.number().integer().optional().allow(null),
-    goods_qty: Joi.number().integer().required()
+    goods_qty: Joi.number().integer().required(),
+    gooods_unit:Joi.string().required(),
 });
 
 

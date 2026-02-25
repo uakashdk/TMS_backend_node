@@ -20,7 +20,8 @@ export const createTrip = async (req, res) => {
       route_id,
       route_summary,
       total_distance_km,
-      goods_qty
+      goods_qty,
+      gooods_unit
     } = req.body;
 
     /* 1️⃣ Validate Job */
@@ -82,7 +83,7 @@ export const createTrip = async (req, res) => {
       });
     }
 
-
+    goods_qty= goods_qty ? Number(goods_qty) : null
     /* 2️⃣ Create Trip */
     const trip = await Trips.create({
       company_id: companyId,
@@ -97,7 +98,8 @@ export const createTrip = async (req, res) => {
       trip_status: "PLANNED",
       primary_driver_id: primary_driver_id,
       secondary_driver_id: secondary_driver_id || null,
-      goods_qty
+      goods_qty,
+      gooods_unit
     }, { transaction: t });
 
     /* 3️⃣ Map Primary Driver */

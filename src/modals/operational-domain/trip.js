@@ -98,6 +98,10 @@ Trip.init(
       allowNull: false,
       defaultValue: 0.00,
     },
+    gooods_unit:{
+      type:DataTypes.STRING,
+       allowNull:true,
+    }
 
   },
   {

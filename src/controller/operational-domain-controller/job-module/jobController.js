@@ -6,7 +6,7 @@ export const createJob = async (req, res) => {
   const t = await sequelize.transaction();
   try {
     const companyId = req.user.companyId;
-    const adminId = req.user.id;
+    const adminId = req.user.userId;
 
     const {
       customer_id,
