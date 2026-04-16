@@ -10,26 +10,34 @@ Role.init(
       primaryKey: true,
       autoIncrement: true,
     },
-        company_id: {
-        type: DataTypes.INTEGER,
-        allowNull: false,
-      },
+    company_id: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+    },
     name: {
       type: DataTypes.STRING,
       allowNull: false,
-      unique: true, // super_admin, admin_manager, driver
+      unique: true,
     },
-
     description: {
       type: DataTypes.STRING,
       allowNull: true,
+    },
+    isActive: {
+      type: DataTypes.STRING,
+      defaultValue: "Y",
     },
   },
   {
     sequelize,
     modelName: "Role",
     tableName: "roles",
+
     timestamps: true,
+
+    // 🔥 CRITICAL LINE
+    createdAt: "created_at",
+    updatedAt: false,
   }
 );
 

@@ -1,9 +1,10 @@
 import bcrypt from "bcrypt";
-import { Admins } from "../../../modals/index.js";
+import { Admins, UserPermissionMapping,Permissions  } from "../../../modals/index.js";
 import { ROLES, ROLE_NAME_MAP } from "../../../constant/roles.js";
 import { Op } from "sequelize";
 import dotenv from "dotenv"
 import { Document } from "../../../modals/index.js";
+import { sequelize } from "../../../Config/Db.js";
 
 dotenv.config();
 
@@ -95,7 +96,80 @@ export const userCreation = async (req, res) => {
   }
 };
 
+export const assignUserPermission = async (req, res) => {
+  const t = await sequelize.transaction();
 
+  try {
+    const { user_id, permission_id, is_allowed } = req.body;
+    const company_id = req.user.companyId;
+
+    // 1️⃣ Validate user belongs to company
+    const user = await Admins.findOne({
+      where: {
+        id: user_id,
+        company_id
+      },
+      transaction: t
+    });
+
+    if (!user) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "User not found"
+      });
+    }
+
+    // 2️⃣ Validate permission exists
+    const permission = await Permissions.findByPk(permission_id, {
+      transaction: t
+    });
+
+    if (!permission) {
+      await t.rollback();
+      return res.status(404).json({
+        success: false,
+        message: "Invalid permission"
+      });
+    }
+
+    // 3️⃣ Check existing mapping
+    const existingMapping = await UserPermissionMapping.findOne({
+      where: {
+        user_id,
+        permission_id
+      },
+      transaction: t
+    });
+
+    // 4️⃣ Update or Create
+    if (existingMapping) {
+      existingMapping.is_allowed = is_allowed;
+      await existingMapping.save({ transaction: t });
+    } else {
+      await UserPermissionMapping.create({
+        user_id,
+        permission_id,
+        is_allowed
+      }, { transaction: t });
+    }
+
+    await t.commit();
+
+    return res.status(200).json({
+      success: true,
+      message: "User permission updated successfully"
+    });
+
+  } catch (error) {
+    await t.rollback();
+    console.log("error---->",error)
+    return res.status(500).json({
+      success: false,
+      message: error.message
+    });
+  }
+};
 
 export const getAssignableRoles = (req, res) => {
   const loggedInUser = req.user;

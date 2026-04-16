@@ -31,12 +31,18 @@ Permission.init(
         allowNull: false, // create, view, update
       },
   },
-  { 
-    sequelize,
-    modelName: 'Permission',
-    tableName: 'permissions',
-    timestamps: true,
-  }
+  {
+  sequelize,
+  modelName: 'Permission',
+  tableName: 'permissions',
+
+  timestamps: true,
+
+  createdAt: "created_at",
+  updatedAt: false,   // 👈 IMPORTANT (because DB doesn’t have it)
+
+  underscored: true,
+}
 );
 
 export default Permission;

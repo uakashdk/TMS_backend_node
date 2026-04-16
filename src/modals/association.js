@@ -39,6 +39,7 @@ import {
   RateContract,
   UserPermissionMapping
 } from "./index.js";
+import Role from "./system-identites-domain/roles.js";
 
 /* ===========================
    SYSTEM-IDENTITY DOMAIN
@@ -63,19 +64,33 @@ UserPermissionMapping.belongsTo(Permissions, {
 });
 
 
-// Roles ↔ Permissions
+// RolePermissions → Permissions
+RolePermissions.belongsTo(Permissions, {
+  foreignKey: "permission_id",
+  as: "permission"
+});
+
+// RolePermissions → Roles
+RolePermissions.belongsTo(Roles, {
+  foreignKey: "role_id",
+  as: "role"
+});
+
+// Role ↔ Permission (Many-to-Many via mapping table)
+
 Roles.belongsToMany(Permissions, {
   through: RolePermissions,
   foreignKey: "role_id",
-  otherKey: "permission_id",
-  as: "permissions",
+  otherKey: "permission_id"
 });
+
 Permissions.belongsToMany(Roles, {
   through: RolePermissions,
   foreignKey: "permission_id",
-  otherKey: "role_id",
-  as: "roles",
+  otherKey: "role_id"
 });
+
+
 
 // Document ↔ Admins
 Document.belongsTo(Admins, { foreignKey: "created_by", as: "creator" });

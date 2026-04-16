@@ -82,8 +82,7 @@ export const createTrip = async (req, res) => {
         message: "Vehicle is already assigned to another driver"
       });
     }
-
-    goods_qty= goods_qty ? Number(goods_qty) : null
+   const parsedGoodsQty = goods_qty ? Number(goods_qty) : null;
     /* 2️⃣ Create Trip */
     const trip = await Trips.create({
       company_id: companyId,
@@ -98,7 +97,7 @@ export const createTrip = async (req, res) => {
       trip_status: "PLANNED",
       primary_driver_id: primary_driver_id,
       secondary_driver_id: secondary_driver_id || null,
-      goods_qty,
+      goods_qty: parsedGoodsQty,
       gooods_unit
     }, { transaction: t });
 

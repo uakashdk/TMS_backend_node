@@ -10,28 +10,34 @@ UserPermissionMapping.init(
       primaryKey: true,
       autoIncrement: true,
     },
-
     user_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-
     permission_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
     },
-
     is_allowed: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
-      defaultValue: true, // IMPORTANT
+      defaultValue: true,
     },
   },
   {
     sequelize,
     modelName: "UserPermissionMapping",
     tableName: "user_permission_mapping",
-    timestamps: true, // requires createdAt & updatedAt columns
+
+    timestamps: true,
+
+    // ✅ THIS IS THE FIX
+    createdAt: "created_at",
+    updatedAt: "updated_at",
+
+    // optional but recommended
+    underscored: true,
+
     indexes: [
       {
         unique: true,

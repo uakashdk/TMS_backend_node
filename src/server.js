@@ -15,6 +15,7 @@ import RateContractRoutes from "./routes/finance-domain-routes/rate-contract-mod
 import PaymentSnapsRoutes from "./routes/finance-domain-routes/payment-snaps-module/PaymentSnapRoutes.js";
 import cookieParser from 'cookie-parser';
 import VehicleMappingDriverRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleMappingDriverRoutes.js";
+import RolesPermissionRoutes from "./routes/system-identites-domain-routes/RoleControllerRoutes.js";
 import cors from "cors"
 dotenv.config();
 
@@ -58,6 +59,7 @@ app.use("/api/v1/fleetlio/trips",TripRoutes);
 app.use("/api/v1/fleetlio/partyAdvance",PartyAdvanceRoutes);
 app.use("/api/v1/fleetlio/rateContract",RateContractRoutes);
 app.use("/api/v1/fleetlio/paymentSnaps",PaymentSnapsRoutes);
+app.use("/api/v1/fleetlio/roles",RolesPermissionRoutes);
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);

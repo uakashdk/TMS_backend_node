@@ -12,7 +12,8 @@ export const Permission = {
         UpdateUser:"update_user",
         UploadUserDocs:"upload_user_document",
         VerifyUserDocs:"verify_user_document",
-        DeleteUser:"delete_user"
+        DeleteUser:"delete_user",
+        AssignPermissions:"assign_permissions"
     },
     DRIVER:{
         View:"view_driver",
@@ -81,5 +82,11 @@ export const Permission = {
         VerifyDocs:"verify_docs",
         DocumentStatus:"documentStatus",
         DocumentUser:"documentUsers"
+     },
+     ROLE:{
+        CreateRole:"create_role",
+        View:"view_role",
+        DeleteRole:"delete_role",
+        UpdateRole:"update_role"
      }
 };

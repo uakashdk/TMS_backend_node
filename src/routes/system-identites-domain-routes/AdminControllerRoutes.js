@@ -1,5 +1,5 @@
 import express from "express";
-import {userCreation,getAssignableRoles,getAllUsers,getUserDetailsById,updateUserProfile} from "../../controller/system-identies-domain-controller/AdminCreation/AdminController.js";
+import {userCreation,getAssignableRoles,getAllUsers,getUserDetailsById,updateUserProfile, assignUserPermission} from "../../controller/system-identies-domain-controller/AdminCreation/AdminController.js";
 import {createAdminSchema,updateAdminSchema} from "../../validation/system-identites-domain-validation/AdminValidation.js"
 import validateRequest from "../../middleware/validationRequest.js";
 import verifyAccessToken from "../../middleware/verifyAccessToken.js";
@@ -19,6 +19,8 @@ router.get("/get-userdetailsById/:userId",verifyAccessToken,getUserDetailsById);
 
 router.put("/update-users/:userId",verifyAccessToken,requirePermission(Permission.USER.UpdateUser),validateRequest(updateAdminSchema),updateUserProfile)
 
+
+router.post("/assign-permissions",verifyAccessToken,requirePermission(Permission.USER.AssignPermissions),assignUserPermission);
 
 export default router;
 
