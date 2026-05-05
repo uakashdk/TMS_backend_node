@@ -26,7 +26,7 @@ Payment.init(
       type: DataTypes.INTEGER,
       allowNull: true,
       references: {
-        model: 'bill_masters',
+        model: 'bills',
         key: 'id',
       },
       onUpdate: 'CASCADE',

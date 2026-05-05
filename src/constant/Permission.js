@@ -1,10 +1,11 @@
 export const Permission = {
     COMPANY:{
-        View:"View Company",
-        CREATE:"create-company",
+        View:"view_company",
+        CREATE:"create_company",
         UPDATE:"update_company",
         UPLOADCOMPANYDOCS:"upload_company_document",
-        VERIFFYCOMPANYDOCS:"verify_company_document"
+        VERIFFYCOMPANYDOCS:"verify_company_document",
+        OWNCOMPANY :"own_company",
     },
     USER:{
         View: "view_user",

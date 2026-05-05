@@ -1,7 +1,7 @@
 import { DataTypes, Model } from 'sequelize';
 import { sequelize } from "../../Config/Db.js";
 
-class InvoiceCharge extends Model {}
+class InvoiceCharge extends Model { }
 
 InvoiceCharge.init(
   {
@@ -26,7 +26,7 @@ InvoiceCharge.init(
       type: DataTypes.INTEGER,
       allowNull: false,
       references: {
-        model: 'other_charger_master', // from other_charge_master
+        model: 'other_charge_master', // ✅ FIXED
         key: 'id',
       },
       onUpdate: 'CASCADE',

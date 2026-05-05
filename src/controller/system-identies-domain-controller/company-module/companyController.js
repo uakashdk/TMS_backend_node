@@ -192,9 +192,11 @@ export const updateEntityDocumentProfile = async (req, res) => {
   const transaction = await sequelize.transaction();
 
   try {
-    const { entityType, entityId, documentId } = req.params;
+    const { companyId, documentId } = req.params;
     const payload = req.body;
 
+    const entityType = "COMPANY"; // hardcoded
+    const entityId = companyId;
     // 1️⃣ Validate params
     if (!entityType || !entityId || !documentId) {
       return res.status(400).json({
@@ -307,9 +309,9 @@ export const getMyCompany = async (req, res) => {
 
     const company = await Companies.findOne({
       where: {
-  id: companyId,
-  is_active: "Y",
-},
+        id: companyId,
+        is_active: "Y",
+      },
 
       attributes: [
         "id",

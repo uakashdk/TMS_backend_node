@@ -48,11 +48,10 @@ PartyGst.init(
       allowNull: false,
       defaultValue: true,
     },
-      is_rcm_applicable: {
-      type: DataTypes.BOOLEAN,
-      allowNull: false,
-      defaultValue: false,
-    },
+      gst_nature:{
+        type: DataTypes.ENUM("fcm", "rcm"),
+        allowNull: false,
+      }
   },
   {
     sequelize,

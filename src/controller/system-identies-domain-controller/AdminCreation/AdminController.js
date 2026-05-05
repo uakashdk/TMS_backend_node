@@ -1,5 +1,5 @@
 import bcrypt from "bcrypt";
-import { Admins, UserPermissionMapping,Permissions  } from "../../../modals/index.js";
+import { Admins, UserPermissionMapping, Permissions, Roles } from "../../../modals/index.js";
 import { ROLES, ROLE_NAME_MAP } from "../../../constant/roles.js";
 import { Op } from "sequelize";
 import dotenv from "dotenv"
@@ -12,7 +12,7 @@ export const userCreation = async (req, res) => {
   try {
     const loggedInUser = req.user;
 
-    console.log("loggedin user is ===========>",loggedInUser);
+    console.log("loggedin user is ===========>", loggedInUser);
 
     // 🔒 STRICT AUTHORIZATION: ONLY COMPANY ADMIN
     if (!loggedInUser || loggedInUser.roleId !== ROLES.COMPANY_ADMIN) {
@@ -163,7 +163,7 @@ export const assignUserPermission = async (req, res) => {
 
   } catch (error) {
     await t.rollback();
-    console.log("error---->",error)
+    console.log("error---->", error)
     return res.status(500).json({
       success: false,
       message: error.message
@@ -230,11 +230,19 @@ export const getAllUsers = async (req, res) => {
 
     const { rows, count } = await Admins.findAndCountAll({
       where: whereCondition,
-      attributes: ["id", "username", "email", "phone", "role_id", "status"],
+      attributes: ["id", "username", "email", "phone", "status"],
+      include: [
+        {
+          model: Roles,
+          as: "role",   // ✅ MUST match association alias
+          attributes: ["id", "name"],
+          required: true,
+        },
+      ],
       order: [["createdAt", "DESC"]],
       limit,
       offset,
-      distinct: true,           // ✅ PREVENT DUPLICATE ROW COUNT
+      distinct: true,
     });
 
     const formattedUsers = rows.map((user) => ({
@@ -244,8 +252,8 @@ export const getAllUsers = async (req, res) => {
       phone: user.phone,
       status: user.status,
       role: {
-        id: user.role_id,
-        name: ROLE_NAME_MAP[user.role_id] || "Unknown",
+        id: user.role.id,     // 👈 use alias
+        name: user.role.name, // 👈 use alias
       },
     }));
 
@@ -260,6 +268,7 @@ export const getAllUsers = async (req, res) => {
       },
     });
   } catch (error) {
+    console.log("error=======>", error);
     return res.status(500).json({
       success: false,
       message: "Internal server error",
@@ -303,30 +312,30 @@ export const getUserDetailsById = async (req, res) => {
       });
     }
 
-        const documents = await Document.findAll({
-          where: {
-            entity_id: userId,
-            entity_type: "User",
-          },
-          attributes: [
-            "id",
-            "entity_type",
-            "document_group",
-            "document_type",
-            "file_url",
-            "content",
-            "status",
-          ],
-        });
+    const documents = await Document.findAll({
+      where: {
+        entity_id: userId,
+        entity_type: "User",
+      },
+      attributes: [
+        "id",
+        "entity_type",
+        "document_group",
+        "document_type",
+        "file_url",
+        "content",
+        "status",
+      ],
+    });
 
-         const URL = process.env.local_URL;
+    const URL = process.env.local_URL;
 
     return res.status(200).json({
       success: true,
       message: "User fetched successfully",
       data: user,
       documents,
-      api:URL
+      api: URL
     });
 
   } catch (error) {

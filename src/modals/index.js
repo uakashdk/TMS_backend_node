@@ -34,7 +34,7 @@ import GrMaster from "./finance-domain/gr_master.js";
 import GstMaster from "./finance-domain/gst_master.js";
 import HsnMaster from "./finance-domain/Hsn_master.js";
 import OtherChargesMaster from "./finance-domain/other_charger_master.js";
-import Invoices from "./finance-domain/invoice.js";
+import Invoice from "./finance-domain/invoice.js";
 import InvoiceCharge from "./finance-domain/InvoiceCharge.js";
 import Payment from "./finance-domain/payment.js";
 import TbillMaster from "./finance-domain/tBill_master.js";
@@ -79,7 +79,6 @@ export {
   GstMaster,
   HsnMaster,
   OtherChargesMaster,
-  Invoices,
   InvoiceCharge,
   Payment,
   TbillMaster,
@@ -91,5 +90,6 @@ export {
   PartyAdvance,
   RateContract,
   PaymentSnap,
-  UserPermissionMapping
+  UserPermissionMapping,
+  Invoice,
 };

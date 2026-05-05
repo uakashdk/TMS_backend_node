@@ -30,7 +30,7 @@ router.post(
 router.get(
   "/get-my-company",
   verifyAccessToken,
-  requireComapnyAdmin,
+  requirePermission(Permission.COMPANY.OWNCOMPANY),
   getMyCompany
 );
 

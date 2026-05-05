@@ -26,7 +26,7 @@ import {
   GstMaster,
   HsnMaster,
   OtherChargesMaster,
-  Invoices,
+  Invoice,
   InvoiceCharge,
   Payment,
   TbillMaster,
@@ -212,12 +212,12 @@ VehicleDriverAssignment.belongsTo(Drivers, {
 
 // Invoice ↔ InvoiceAdvanceAdjustment
 
-Invoices.hasMany(InvoiceAdvanceAdjustment, {
+Invoice.hasMany(InvoiceAdvanceAdjustment, {
   foreignKey: "invoice_id",
   as: "advanceAdjustments",
 });
 
-InvoiceAdvanceAdjustment.belongsTo(Invoices, {
+InvoiceAdvanceAdjustment.belongsTo(Invoice, {
   foreignKey: "invoice_id",
   as: "invoice",
 });
@@ -407,21 +407,21 @@ GrMaster.belongsTo(PartyGst, {
 
 
 // Invoice ↔ Bills (ONE INVOICE → MANY BILLS)
-Invoices.hasMany(TbillMaster, {
+Invoice.hasMany(TbillMaster, {
   foreignKey: "invoice_id",
   as: "bills",
 });
-TbillMaster.belongsTo(Invoices, {
+TbillMaster.belongsTo(Invoice, {
   foreignKey: "invoice_id",
   as: "invoice",
 });
 
 // Invoice ↔ Charges
-Invoices.hasMany(InvoiceCharge, {
+Invoice.hasMany(InvoiceCharge, {
   foreignKey: "invoice_id",
   as: "charges",
 });
-InvoiceCharge.belongsTo(Invoices, {
+InvoiceCharge.belongsTo(Invoice, {
   foreignKey: "invoice_id",
   as: "invoice",
 });
@@ -435,8 +435,8 @@ InvoiceCharge.belongsTo(GstMaster, { foreignKey: "gst_id", as: "gst" });
 InvoiceCharge.belongsTo(HsnMaster, { foreignKey: "hsn_id", as: "hsn" });
 
 // Invoice ↔ Payments
-Invoices.hasMany(Payment, { foreignKey: "invoice_id", as: "payments" });
-Payment.belongsTo(Invoices, {
+Invoice.hasMany(Payment, { foreignKey: "invoice_id", as: "payments" });
+Payment.belongsTo(Invoice, {
   foreignKey: "invoice_id",
   as: "invoice",
 });

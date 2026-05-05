@@ -1,4 +1,4 @@
-import { PartyAdvance, Party, InvoiceAdvanceAdjustment, Invoices } from "../../../modals/index.js";
+import { PartyAdvance, Party, InvoiceAdvanceAdjustment, Invoice } from "../../../modals/index.js";
 import { sequelize } from "../../../Config/Db.js";
 import { Op } from "sequelize";
 import { ROLES } from "../../../constant/roles.js";
@@ -230,7 +230,7 @@ export const getPartyAdvanceLedger = async (req, res) => {
             },
             include: [
               {
-                model: Invoices,
+                model: Invoice,
                 as: "invoice",
                 attributes: ["invoice_number", "invoice_date"],
               },
@@ -334,7 +334,7 @@ export const adjustPartyAdvance = async (req, res, next) => {
     }
 
     // 1️⃣ Fetch Invoice
-    const invoice = await Invoices.findOne({
+    const invoice = await Invoice.findOne({
       where: { id: invoice_id, company_id },
       transaction,
       lock: true, // prevent race condition
@@ -485,7 +485,7 @@ export const reversePartyAdvanceAdjustment = async (req, res, next) => {
     }
 
     // 2️⃣ Fetch Invoice
-    const invoice = await Invoices.findOne({
+    const invoice = await Invoice.findOne({
       where: { id: adjustment.invoice_id, company_id },
       transaction,
       lock: true,

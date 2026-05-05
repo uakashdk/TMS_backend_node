@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../Config/Db.js";
 
-class Invoice extends Model {}
+class Invoice extends Model { }
 
 Invoice.init(
   {
@@ -67,28 +67,33 @@ Invoice.init(
       allowNull: true,
     },
 
+
+    gst_nature: {
+      type: DataTypes.ENUM("fcm", "rcm"),
+      allowNull: false,
+    },
     is_gst_applicable: {
       type: DataTypes.BOOLEAN,
       defaultValue: true,
     },
 
     taxable_amount: {
-      type: DataTypes.DECIMAL(12,2),
+      type: DataTypes.DECIMAL(12, 2),
       defaultValue: 0,
     },
 
     gst_amount: {
-      type: DataTypes.DECIMAL(12,2),
+      type: DataTypes.DECIMAL(12, 2),
       defaultValue: 0,
     },
 
     round_off: {
-      type: DataTypes.DECIMAL(12,2),
+      type: DataTypes.DECIMAL(12, 2),
       defaultValue: 0,
     },
 
     net_amount: {
-      type: DataTypes.DECIMAL(12,2),
+      type: DataTypes.DECIMAL(12, 2),
       defaultValue: 0,
     },
 

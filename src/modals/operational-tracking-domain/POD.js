@@ -17,10 +17,10 @@ POD.init(
       references: { model: 'trips', key: 'id' },
     },
 
-    customer_id: {
+    party_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
-      references: { model: 'customers', key: 'id' },
+      references: { model: 'parties', key: 'id' },
     },
 
     delivery_date: {

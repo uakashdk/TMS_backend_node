@@ -16,6 +16,7 @@ import PaymentSnapsRoutes from "./routes/finance-domain-routes/payment-snaps-mod
 import cookieParser from 'cookie-parser';
 import VehicleMappingDriverRoutes from "./routes/operational-domain-routes/vehicleModule/VehicleMappingDriverRoutes.js";
 import RolesPermissionRoutes from "./routes/system-identites-domain-routes/RoleControllerRoutes.js";
+import "./modals/index.js"; // or whatever file exports all models
 import cors from "cors"
 dotenv.config();
 
@@ -75,7 +76,7 @@ const startServer = async () => {
     console.log('✅ Database connected');
 
     // Sync all models
-    //  await sequelize.sync({ force: true, logging});
+    //  await sequelize.sync({ force: true});
     console.log('✅ All tables created successfully');
 
     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));

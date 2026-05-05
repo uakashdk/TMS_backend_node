@@ -1,4 +1,4 @@
-import { Admins, Drivers, Document } from "../../../modals/index.js";
+import { Admins, Drivers, Document, Roles } from "../../../modals/index.js";
 import { sequelize } from "../../../Config/Db.js";
 import { ROLES } from "../../../constant/roles.js";
 import bcrypt from "bcrypt";
@@ -40,6 +40,8 @@ export const createDriver = async (req, res) => {
       transaction
     });
 
+
+
     // 3️⃣ Create admin if not exists
     if (!admin) {
       const rawPassword =
@@ -47,13 +49,20 @@ export const createDriver = async (req, res) => {
 
       const hashedPassword = await bcrypt.hash(rawPassword, 12);
 
+      const driverRole = await Roles.findOne({
+        where: {
+          role_key: "DRIVER",
+          company_id: companyId
+        }
+      });
+
       admin = await Admins.create(
         {
           username: phone_number,
           email: email_address,
           password: hashedPassword,
           phone: phone_number,
-          role_id: ROLES.DRIVER,
+          role_id: driverRole.id,
           company_id: companyId,
           status: true,
           isverified: false,
@@ -128,10 +137,17 @@ export const getAllDrivers = async (req, res) => {
 
     const offset = (page - 1) * limit;
 
+    const driverRole = await Roles.findOne({
+      where: {
+        role_key: "DRIVER",
+        company_id: companyId
+      }
+    });
+
     const { rows, count } = await Admins.findAndCountAll({
       where: {
         company_id: companyId,
-        role_id: ROLES.DRIVER
+        role_id: driverRole.id
       },
       include: [
         {
@@ -187,11 +203,18 @@ export const getDriverDetailsById = async (req, res) => {
       });
     }
 
+    const driverRole = await Roles.findOne({
+      where: {
+        role_key: "DRIVER",
+        company_id: companyId
+      }
+    });
+
     const driverAdmin = await Admins.findOne({
       where: {
         id,
         company_id: companyId,
-        role_id: ROLES.DRIVER
+        role_id: driverRole.id
       },
       attributes: [
         "id",
@@ -216,22 +239,22 @@ export const getDriverDetailsById = async (req, res) => {
         message: "Driver not found"
       });
     }
-      console.log("userId",id)
+    console.log("userId", id)
     const documents = await Document.findAll({
-          where: {
-            entity_id: id,
-          },
-          attributes: [
-            "id",
-            "entity_type",
-            "document_group",
-            "document_type",
-            "file_url",
-            "content",
-            "status",
-          ],
-        });
-          const URL = process.env.local_URL;
+      where: {
+        entity_id: id,
+      },
+      attributes: [
+        "id",
+        "entity_type",
+        "document_group",
+        "document_type",
+        "file_url",
+        "content",
+        "status",
+      ],
+    });
+    const URL = process.env.local_URL;
 
     return res.status(200).json({
       success: true,
@@ -247,7 +270,7 @@ export const getDriverDetailsById = async (req, res) => {
         driverProfile: driverAdmin.driverProfile // null if unverified
       },
       documents,
-      api:URL
+      api: URL
     });
 
   } catch (error) {
@@ -276,7 +299,7 @@ export const updateDriver = async (req, res) => {
         message: "Session expired. Please login again."
       });
     }
-    console.log("req.body=========>",req.body);
+    console.log("req.body=========>", req.body);
     // Driver profile fields
     const {
       name,
@@ -291,12 +314,19 @@ export const updateDriver = async (req, res) => {
       driver_license_expiry_date
     } = req.body;
 
+   const driverRole = await Roles.findOne({
+      where: {
+        role_key: "DRIVER",
+        company_id: companyId
+      }
+    });
+
     // 1️⃣ Validate admin (driver user)
     const admin = await Admins.findOne({
       where: {
         id,
         company_id: companyId,
-        role_id: ROLES.DRIVER
+        role_id: driverRole.id
       },
       transaction
     });
