@@ -24,6 +24,7 @@ PartyGst.init(
     gst_number: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: true, // 🔥 IMPORTANT
     },
 
     state_id: {
@@ -37,6 +38,16 @@ PartyGst.init(
       defaultValue: "regular",
     },
 
+    gst_nature: {
+      type: DataTypes.ENUM("fcm", "rcm"),
+      allowNull: false,
+    },
+
+    billing_type: {
+      type: DataTypes.ENUM("igst", "cgst_sgst"), // 🔥 NEW (IMPORTANT)
+      allowNull: false,
+    },
+
     is_primary: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -48,10 +59,6 @@ PartyGst.init(
       allowNull: false,
       defaultValue: true,
     },
-      gst_nature:{
-        type: DataTypes.ENUM("fcm", "rcm"),
-        allowNull: false,
-      }
   },
   {
     sequelize,
@@ -59,6 +66,14 @@ PartyGst.init(
     tableName: "party_gsts",
     timestamps: true,
     underscored: true,
+    indexes: [
+      {
+        fields: ["party_id"],
+      },
+      {
+        fields: ["company_id"],
+      },
+    ],
   }
 );
 

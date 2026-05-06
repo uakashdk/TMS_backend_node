@@ -14,22 +14,23 @@ Party.init(
     company_id: {
       type: DataTypes.INTEGER,
       allowNull: false,
+      unique: "unique_party_per_company",
     },
 
     party_name: {
       type: DataTypes.STRING,
       allowNull: false,
+      unique: "unique_party_per_company",
     },
 
     party_type: {
-      type: DataTypes.ENUM(
-        "client",
-        "consignor",
-        "consignee",
-        "vendor",
-        "broker"
-      ),
+      type: DataTypes.STRING, // 🔥 changed from ENUM
       allowNull: false,
+    },
+
+    code: {
+      type: DataTypes.STRING, // optional business usage
+      allowNull: true,
     },
 
     contact_person: {
@@ -59,6 +60,11 @@ Party.init(
     tableName: "parties",
     timestamps: true,
     underscored: true,
+    indexes: [
+      {
+        fields: ["company_id"],
+      },
+    ],
   }
 );
 

@@ -137,3 +137,9 @@ Multi-level financial flow is normalized.
 If you want, I can draw an actual diagram image for you with boxes & arrows, which you can use in documentation or planning.
 
 Do you want me to create that image?
+
+
+npx sequelize-cli migration:generate --name add-test-column
+npx sequelize-cli db:migrate
+npx sequelize-cli db:migrate:undo
+npx sequelize-cli db:migrate:undo:all

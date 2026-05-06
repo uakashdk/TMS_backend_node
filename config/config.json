@@ -1,0 +1,23 @@
+{
+  "development": {
+    "username": "root",
+    "password": "Admin@528",
+    "database": "TMSDb",
+    "host": "mysql",
+    "dialect": "mysql"
+  },
+  "test": {
+    "username": "root",
+    "password": "Admin@528",
+    "database": "TMSDb",
+    "host": "mysql",
+    "dialect": "mysql"
+  },
+  "production": {
+    "username": "root",
+    "password": "Admin@528",
+    "database": "TMSDb",
+    "host": "mysql",
+    "dialect": "mysql"
+  }
+}

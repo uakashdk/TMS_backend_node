@@ -22,7 +22,7 @@ PartyAddress.init(
     },
 
     address_type: {
-      type: DataTypes.ENUM("pickup", "delivery", "billing", "office"),
+      type: DataTypes.STRING, // 🔥 changed from ENUM
       allowNull: false,
     },
 
@@ -33,6 +33,11 @@ PartyAddress.init(
 
     address_line2: {
       type: DataTypes.STRING,
+      allowNull: true,
+    },
+
+    city_id: {
+      type: DataTypes.INTEGER,
       allowNull: true,
     },
 
@@ -52,6 +57,16 @@ PartyAddress.init(
       defaultValue: "India",
     },
 
+    latitude: {
+      type: DataTypes.DECIMAL(10, 7), // 🔥 NEW
+      allowNull: true,
+    },
+
+    longitude: {
+      type: DataTypes.DECIMAL(10, 7), // 🔥 NEW
+      allowNull: true,
+    },
+
     is_primary: {
       type: DataTypes.BOOLEAN,
       allowNull: false,
@@ -63,10 +78,6 @@ PartyAddress.init(
       allowNull: false,
       defaultValue: true,
     },
-      city_id: {
-      type: DataTypes.INTEGER,
-      allowNull: true,
-    },
   },
   {
     sequelize,
@@ -74,6 +85,14 @@ PartyAddress.init(
     tableName: "party_addresses",
     timestamps: true,
     underscored: true,
+    indexes: [
+      {
+        fields: ["party_id"],
+      },
+      {
+        fields: ["company_id"],
+      },
+    ],
   }
 );
 

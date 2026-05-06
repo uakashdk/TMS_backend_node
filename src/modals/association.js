@@ -100,17 +100,44 @@ Admins.hasMany(Document, { foreignKey: "created_by", as: "documents" });
    PARTY DOMAIN (NEW – FIXED)
 =========================== */
 
-// Party ↔ PartyAddress
-Party.hasMany(PartyAddress, { foreignKey: "party_id", as: "addresses" });
-PartyAddress.belongsTo(Party, { foreignKey: "party_id", as: "party" });
+// Party ↔ Address
+Party.hasMany(PartyAddress, {
+  foreignKey: "party_id",
+  as: "addresses",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
 
-// Party ↔ PartyGst
-Party.hasMany(PartyGst, { foreignKey: "party_id", as: "gsts" });
-PartyGst.belongsTo(Party, { foreignKey: "party_id", as: "party" });
+PartyAddress.belongsTo(Party, {
+  foreignKey: "party_id",
+  as: "party",
+});
+
+// Party ↔ GST
+Party.hasMany(PartyGst, {
+  foreignKey: "party_id",
+  as: "gsts",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+PartyGst.belongsTo(Party, {
+  foreignKey: "party_id",
+  as: "party",
+});
 
 // Party ↔ RateContact
-Party.hasMany(RateContact, { foreignKey: "party_id", as: "contacts" });
-RateContact.belongsTo(Party, { foreignKey: "party_id", as: "party" });
+Party.hasMany(RateContract, {
+  foreignKey: "party_id",
+  as: "rateContracts",
+  onDelete: "CASCADE",
+  onUpdate: "CASCADE",
+});
+
+RateContract.belongsTo(Party, {
+  foreignKey: "party_id",
+  as: "party",
+});
 
 /* ===========================
    OPERATIONAL DOMAIN
