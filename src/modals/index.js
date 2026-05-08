@@ -47,6 +47,7 @@ import InvoiceAdvanceAdjustment from "./finance-domain/InvoiceAdvanceAdjustment.
 import RateContract from "./finance-domain/RateContract.js";
 import PaymentSnap from "./finance-domain/PaymentSnap.js";
 import UserPermissionMapping from "./system-identites-domain/user-permission-mapping.js"
+import JobAdvanceAdjustment from "./finance-domain/JobAdvanceAdjustment.js";
 import "./association.js";
 
 export {
@@ -92,4 +93,5 @@ export {
   PaymentSnap,
   UserPermissionMapping,
   Invoice,
+  JobAdvanceAdjustment,
 };

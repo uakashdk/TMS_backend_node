@@ -28,6 +28,10 @@ const partyGstSchema = Joi.object({
     .valid("regular", "composition", "unregistered")
     .default("regular"),
 
+  gst_nature: Joi.string()
+    .valid("fcm", "rcm")
+    .required(),
+
   is_primary: Joi.boolean().default(false),
 });
 
@@ -65,17 +69,21 @@ const UpdatePartyAddressSchema = Joi.object({
   is_primary: Joi.boolean().required()
 });
 
- const UpdatePartyGstSchema = Joi.object({
-   gst_number: Joi.string().required(),// you may validate format later if needed
+const UpdatePartyGstSchema = Joi.object({
+  gst_number: Joi.string().required(),
 
   state_id: Joi.number().integer().required(),
+
   gst_registration_type: Joi.string()
     .valid("regular", "composition", "unregistered")
     .required(),
 
+  gst_nature: Joi.string()
+    .valid("fcm", "rcm")
+    .required(),
+
   is_primary: Joi.boolean().required()
 });
-
 
 export const updatePartySchema = Joi.object({
   party_name: Joi.string().min(3).max(150).required(),

@@ -1,4 +1,4 @@
-import {Party,PartyAddress,PartyGst} from "../../../modals/index.js"
+import { Party, PartyAddress, PartyGst } from "../../../modals/index.js"
 import { sequelize } from "../../../Config/Db.js";
 import { ROLES } from "../../../constant/roles.js";
 import { Op } from "sequelize";
@@ -19,7 +19,79 @@ export const createParty = async (req, res) => {
       gsts = [],
     } = req.body;
 
-    // 1. Create Party
+    /* ===========================
+       1. BASIC VALIDATION
+    =========================== */
+
+    if (!party_name || !party_type) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Party name and type are required",
+      });
+    }
+
+    /* ===========================
+       2. DUPLICATE CHECK (CASE-INSENSITIVE)
+    =========================== */
+
+    const existingParty = await Party.findOne({
+      where: {
+        company_id: companyId,
+        party_name: sequelize.where(
+          sequelize.fn("LOWER", sequelize.col("party_name")),
+          party_name.toLowerCase()
+        ),
+        is_active: true,
+      },
+      transaction,
+    });
+
+    if (existingParty) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Party already exists",
+      });
+    }
+
+    /* ===========================
+       3. ADDRESS VALIDATION
+    =========================== */
+
+    if (addresses.length > 0) {
+      const primaryAddresses = addresses.filter(a => a.is_primary);
+      if (primaryAddresses.length > 1) {
+        throw new Error("Only one primary address allowed");
+      }
+    }
+
+    /* ===========================
+       4. GST VALIDATION
+    =========================== */
+
+    if (gsts.length > 0) {
+      const primaryGSTs = gsts.filter(g => g.is_primary);
+
+      if (primaryGSTs.length > 1) {
+        throw new Error("Only one GST can be primary");
+      }
+
+      if (primaryGSTs.length === 0) {
+        throw new Error("At least one GST must be primary");
+      }
+
+      for (const gst of gsts) {
+        if (!gst.gst_number || !gst.state_id || !gst.gst_nature) {
+          throw new Error("GST number, state and nature are required");
+        }
+      }
+    }
+
+    /* ===========================
+       5. CREATE PARTY
+    =========================== */
+
     const party = await Party.create(
       {
         company_id: companyId,
@@ -32,15 +104,19 @@ export const createParty = async (req, res) => {
       { transaction }
     );
 
-    // 2. Create Party Addresses (if any)
+    /* ===========================
+       6. CREATE ADDRESSES
+    =========================== */
+
     if (addresses.length > 0) {
-      const addressPayload = addresses.map((addr) => ({
+      const addressPayload = addresses.map(addr => ({
         company_id: companyId,
         party_id: party.id,
         address_type: addr.address_type,
         address_line1: addr.address_line1,
         address_line2: addr.address_line2,
         state_id: addr.state_id,
+        city_id: addr.city_id || null,
         postal_code: addr.postal_code,
         country: addr.country || "India",
         is_primary: addr.is_primary || false,
@@ -49,14 +125,18 @@ export const createParty = async (req, res) => {
       await PartyAddress.bulkCreate(addressPayload, { transaction });
     }
 
-    // 3. Create Party GSTs (if any)
+    /* ===========================
+       7. CREATE GSTs
+    =========================== */
+
     if (gsts.length > 0) {
-      const gstPayload = gsts.map((gst) => ({
+      const gstPayload = gsts.map(gst => ({
         company_id: companyId,
         party_id: party.id,
         gst_number: gst.gst_number,
         state_id: gst.state_id,
-        gst_registration_type: gst.gst_registration_type,
+        gst_registration_type: gst.gst_registration_type || "regular",
+        gst_nature: gst.gst_nature,
         is_primary: gst.is_primary || false,
       }));
 
@@ -70,15 +150,9 @@ export const createParty = async (req, res) => {
       message: "Party created successfully",
       data: {
         party_id: party.id,
-        party_name: party.party_name,
-        party_type: party.party_type,
-        contact_person: party.contact_person,
-        email: party.email,
-        phone_number: party.phone_number,
-        addresses: addresses,
-        gsts: gsts,
       },
     });
+
   } catch (error) {
     await transaction.rollback();
 
@@ -103,7 +177,36 @@ export const getParties = async (req, res) => {
     // search
     const search = req.query.search || "";
 
-    // fetch all required data (single query)
+    // 🔥 Dynamic include based on role (IMPORTANT)
+    const include = [];
+
+    if (
+      roleId === ROLES.COMPANY_ADMIN ||
+      roleId === ROLES.OPERATIONAL_MANAGER ||
+      roleId === ROLES.DRIVER
+    ) {
+      include.push({
+        model: PartyAddress,
+        as: "addresses",
+        where: { is_active: true },
+        required: false,
+      });
+    }
+
+    if (
+      roleId === ROLES.COMPANY_ADMIN ||
+      roleId === ROLES.OPERATIONAL_MANAGER ||
+      roleId === ROLES.ACCOUNTS_MANAGER
+    ) {
+      include.push({
+        model: PartyGst,
+        as: "gsts",
+        where: { is_active: true },
+        required: false,
+      });
+    }
+
+    // 🔥 Main query
     const { rows, count } = await Party.findAndCountAll({
       where: {
         company_id: companyId,
@@ -112,26 +215,14 @@ export const getParties = async (req, res) => {
         },
         is_active: true,
       },
-      include: [
-        {
-          model: PartyAddress,
-          as: "addresses",
-          where: { is_active: true },
-          required: false,
-        },
-        {
-          model: PartyGst,
-          as: "gsts",
-          where: { is_active: true },
-          required: false,
-        },
-      ],
+      include,
+      distinct: true, // ✅ FIX: prevents duplicate count
       limit,
       offset,
       order: [["created_at", "DESC"]],
     });
 
-    // role-based response shaping
+    // 🔥 Response shaping
     const data = rows.map((party) => {
       const base = {
         id: party.id,
@@ -143,35 +234,31 @@ export const getParties = async (req, res) => {
         is_active: party.is_active,
       };
 
-      // Company Admin & Operational Manager → everything
       if (
         roleId === ROLES.COMPANY_ADMIN ||
         roleId === ROLES.OPERATIONAL_MANAGER
       ) {
         return {
           ...base,
-          gsts: party.gsts,
-          addresses: party.addresses,
+          addresses: party.addresses || [],
+          gsts: party.gsts || [],
         };
       }
 
-      // Accounts Manager → party + gst only
       if (roleId === ROLES.ACCOUNTS_MANAGER) {
         return {
           ...base,
-          gsts: party.gsts,
+          gsts: party.gsts || [],
         };
       }
 
-      // Driver → party + address only
       if (roleId === ROLES.DRIVER) {
         return {
           ...base,
-          addresses: party.addresses,
+          addresses: party.addresses || [],
         };
       }
 
-      // fallback (safe)
       return base;
     });
 
@@ -186,6 +273,7 @@ export const getParties = async (req, res) => {
       data,
     });
   } catch (error) {
+    console.log("errror=========>",error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch parties",
@@ -197,28 +285,53 @@ export const getParties = async (req, res) => {
 export const getPartyById = async (req, res) => {
   try {
     const { partyId } = req.params;
-    const { companyId } = req.user;
+    const { companyId, roleId } = req.user;
 
+    // ✅ Validate ID
+    if (!partyId || isNaN(partyId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Party ID",
+      });
+    }
+
+    // ✅ Dynamic include based on role
+    const include = [];
+
+    if (
+      roleId === ROLES.COMPANY_ADMIN ||
+      roleId === ROLES.OPERATIONAL_MANAGER ||
+      roleId === ROLES.DRIVER
+    ) {
+      include.push({
+        model: PartyAddress,
+        as: "addresses",
+        where: { is_active: true },
+        required: false,
+      });
+    }
+
+    if (
+      roleId === ROLES.COMPANY_ADMIN ||
+      roleId === ROLES.OPERATIONAL_MANAGER ||
+      roleId === ROLES.ACCOUNTS_MANAGER
+    ) {
+      include.push({
+        model: PartyGst,
+        as: "gsts",
+        where: { is_active: true },
+        required: false,
+      });
+    }
+
+    // ✅ Fetch party
     const party = await Party.findOne({
       where: {
         id: partyId,
         company_id: companyId,
         is_active: true,
       },
-      include: [
-        {
-          model: PartyAddress,
-          as: "addresses",
-          where: { is_active: true },
-          required: false,
-        },
-        {
-          model: PartyGst,
-          as: "gsts",
-          where: { is_active: true },
-          required: false,
-        },
-      ],
+      include,
     });
 
     if (!party) {
@@ -228,9 +341,33 @@ export const getPartyById = async (req, res) => {
       });
     }
 
+    // ✅ Clean response shaping
+    const response = {
+      id: party.id,
+      party_name: party.party_name,
+      party_type: party.party_type,
+      contact_person: party.contact_person,
+      email: party.email,
+      phone_number: party.phone_number,
+      is_active: party.is_active,
+    };
+
+    if (
+      roleId === ROLES.COMPANY_ADMIN ||
+      roleId === ROLES.OPERATIONAL_MANAGER
+    ) {
+      response.addresses = party.addresses || [];
+      response.gsts = party.gsts || [];
+    } else if (roleId === ROLES.ACCOUNTS_MANAGER) {
+      response.gsts = party.gsts || [];
+    } else if (roleId === ROLES.DRIVER) {
+      response.addresses = party.addresses || [];
+    }
+
     return res.status(200).json({
       success: true,
-      data: party,
+      message: "Party fetched successfully",
+      data: response,
     });
   } catch (error) {
     return res.status(500).json({
@@ -249,10 +386,11 @@ export const updateParty = async (req, res) => {
     const companyId = req.user.companyId;
     const partyId = req.params.id;
 
-    if (!partyId) {
+    // ✅ Validate ID
+    if (!partyId || isNaN(partyId)) {
       return res.status(400).json({
         success: false,
-        message: "Party ID is required",
+        message: "Invalid Party ID",
       });
     }
 
@@ -262,86 +400,128 @@ export const updateParty = async (req, res) => {
       contact_person,
       email,
       phone_number,
-      addresses = [],
-      gsts = [],
+      addresses,
+      gsts,
     } = req.body;
 
-    // 1. Check Party Exists
+    // ✅ Check Party Exists
     const party = await Party.findOne({
       where: {
         id: partyId,
         company_id: companyId,
+        is_active: true,
       },
       transaction,
     });
 
     if (!party) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
         message: "Party not found",
       });
     }
 
-    // 2. Update Party
+    // ✅ Prevent duplicate party name
+    if (party_name) {
+      const existingParty = await Party.findOne({
+        where: {
+          company_id: companyId,
+          party_name,
+          id: { [Op.ne]: partyId },
+          is_active: true,
+        },
+        transaction,
+      });
+
+      if (existingParty) {
+        await transaction.rollback();
+        return res.status(400).json({
+          success: false,
+          message: "Party name already exists",
+        });
+      }
+    }
+
+    // ✅ Update only provided fields (IMPORTANT)
     await party.update(
       {
-        party_name,
-        party_type,
-        contact_person,
-        email,
-        phone_number,
+        ...(party_name && { party_name }),
+        ...(party_type && { party_type }),
+        ...(contact_person && { contact_person }),
+        ...(email && { email }),
+        ...(phone_number && { phone_number }),
       },
       { transaction }
     );
 
-    // 3. Replace Addresses (if provided)
-    if (addresses.length > 0) {
-      await PartyAddress.destroy({
-        where: {
-          party_id: partyId,
+    /* =========================
+       ADDRESS UPDATE
+    ========================= */
+    if (addresses !== undefined) {
+      // Validate primary
+      const primaryCount = addresses.filter(a => a.is_primary).length;
+      if (primaryCount > 1) {
+        throw new Error("Only one address can be primary");
+      }
+
+      // Soft delete old
+      await PartyAddress.update(
+        { is_active: false },
+        {
+          where: { party_id: partyId, company_id: companyId },
+          transaction,
+        }
+      );
+
+      // Insert new (only if provided non-empty)
+      if (addresses.length > 0) {
+        const payload = addresses.map(addr => ({
           company_id: companyId,
-        },
-        transaction,
-      });
+          party_id: partyId,
+          address_type: addr.address_type,
+          address_line1: addr.address_line1,
+          address_line2: addr.address_line2,
+          state_id: addr.state_id,
+          postal_code: addr.postal_code,
+          country: addr.country || "India",
+          is_primary: addr.is_primary || false,
+        }));
 
-      const addressPayload = addresses.map((addr) => ({
-        company_id: companyId,
-        party_id: partyId,
-        address_type: addr.address_type,
-        address_line1: addr.address_line1,
-        address_line2: addr.address_line2,
-        state_id: addr.state_id,
-        postal_code: addr.postal_code,
-        country: addr.country || "India",
-        is_primary: addr.is_primary || false,
-      }));
-
-      await PartyAddress.bulkCreate(addressPayload, { transaction });
+        await PartyAddress.bulkCreate(payload, { transaction });
+      }
     }
 
-    // 4. Replace GST (only one)
-    if (gsts.length > 0) {
-      await PartyGst.destroy({
-        where: {
-          party_id: partyId,
-          company_id: companyId,
-        },
-        transaction,
-      });
+    /* =========================
+       GST UPDATE
+    ========================= */
+    if (gsts !== undefined) {
+      const primaryCount = gsts.filter(g => g.is_primary).length;
+      if (primaryCount > 1) {
+        throw new Error("Only one GST can be primary");
+      }
 
-      const gst = gsts[0];
-
-      await PartyGst.create(
+      await PartyGst.update(
+        { is_active: false },
         {
+          where: { party_id: partyId, company_id: companyId },
+          transaction,
+        }
+      );
+
+      if (gsts.length > 0) {
+        const payload = gsts.map(gst => ({
           company_id: companyId,
           party_id: partyId,
           gst_number: gst.gst_number,
           state_id: gst.state_id,
           gst_registration_type: gst.gst_registration_type,
-          is_primary: true,
-        },
-        { transaction }
-      );
+          gst_nature: gst.gst_nature,
+          is_primary: gst.is_primary || false,
+        }));
+
+        await PartyGst.bulkCreate(payload, { transaction });
+      }
     }
 
     await transaction.commit();
@@ -350,6 +530,7 @@ export const updateParty = async (req, res) => {
       success: true,
       message: "Party updated successfully",
     });
+
   } catch (error) {
     await transaction.rollback();
 
@@ -366,41 +547,77 @@ export const deleteParty = async (req, res) => {
 
   try {
     const companyId = req.user.companyId;
+    const userId = req.user.id; // for audit (optional)
     const partyId = req.params.id;
 
-    if (!partyId) {
+    // ✅ Validate ID
+    if (!partyId || isNaN(partyId)) {
       return res.status(400).json({
         success: false,
-        message: "Party ID is required",
+        message: "Invalid Party ID",
       });
     }
 
-    // 1. Check if party exists
+    // ✅ Check if party exists & active
     const party = await Party.findOne({
-      where: { id: partyId, company_id: companyId },
+      where: {
+        id: partyId,
+        company_id: companyId,
+        is_active: true,
+      },
       transaction,
     });
 
     if (!party) {
+      await transaction.rollback();
       return res.status(404).json({
         success: false,
-        message: "Party not found",
+        message: "Party not found or already inactive",
       });
     }
+    const existingContract = await RateContract.findOne({
+      where: {
+        party_id: partyId,
+        company_id: companyId,
+      },
+      transaction,
+    });
 
-    // 2. Soft delete party
-    await party.update({ is_active: false }, { transaction });
-
-    // 3. Soft delete related addresses
+    if (existingContract) {
+      await transaction.rollback();
+      return res.status(400).json({
+        success: false,
+        message: "Cannot delete party. It is used in rate contracts.",
+      });
+    }
+    await party.update(
+      {
+        is_active: false,
+        // updated_by: userId, // optional
+      },
+      { transaction }
+    );
     await PartyAddress.update(
       { is_active: false },
-      { where: { party_id: partyId, company_id: companyId }, transaction }
+      {
+        where: {
+          party_id: partyId,
+          company_id: companyId,
+          is_active: true,
+        },
+        transaction,
+      }
     );
-
-    // 4. Soft delete related GST
     await PartyGst.update(
       { is_active: false },
-      { where: { party_id: partyId, company_id: companyId }, transaction }
+      {
+        where: {
+          party_id: partyId,
+          company_id: companyId,
+          is_active: true,
+        },
+        transaction,
+      }
     );
 
     await transaction.commit();
@@ -409,8 +626,10 @@ export const deleteParty = async (req, res) => {
       success: true,
       message: "Party deactivated successfully",
     });
+
   } catch (error) {
     await transaction.rollback();
+
     return res.status(500).json({
       success: false,
       message: "Failed to deactivate party",
@@ -440,25 +659,25 @@ export const getPartyDropdown = async (req, res) => {
         // Include addresses only if role allows
         ...(roleId === ROLES.COMPANY_ADMIN || roleId === ROLES.OPERATIONAL_MANAGER || roleId === ROLES.DRIVER
           ? [
-              {
-                model: PartyAddress,
-                as: "addresses",
-                where: { is_active: true },
-                required: false, // allow empty array
-              },
-            ]
+            {
+              model: PartyAddress,
+              as: "addresses",
+              where: { is_active: true },
+              required: false, // allow empty array
+            },
+          ]
           : []),
 
         // Include GST only if role allows
         ...(roleId === ROLES.COMPANY_ADMIN || roleId === ROLES.OPERATIONAL_MANAGER || roleId === ROLES.ACCOUNTS_MANAGER
           ? [
-              {
-                model: PartyGst,
-                as: "gsts",
-                where: { is_active: true },
-                required: false, // allow empty array
-              },
-            ]
+            {
+              model: PartyGst,
+              as: "gsts",
+              where: { is_active: true },
+              required: false, // allow empty array
+            },
+          ]
           : []),
       ],
       order: [["party_name", "ASC"]],

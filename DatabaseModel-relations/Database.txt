@@ -143,3 +143,28 @@ npx sequelize-cli migration:generate --name add-test-column
 npx sequelize-cli db:migrate
 npx sequelize-cli db:migrate:undo
 npx sequelize-cli db:migrate:undo:all
+
+CLIENT GIVES MONEY
+        │
+        ▼
+CREATE PARTY_ADVANCE ENTRY
+        │
+        ▼
+Advance Status = OPEN
+        │
+        ▼
+Job Created
+        │
+        ▼
+Adjustment Done
+(job_advance_adjustments)
+        │
+        ▼
+Advance Balance Reduced
+        │
+        ▼
+Job Pending Amount Reduced
+        │
+        ▼
+If balance = 0
+Advance Status = CLOSED

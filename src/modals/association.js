@@ -37,7 +37,8 @@ import {
   PartyAdvance,
   InvoiceAdvanceAdjustment,
   RateContract,
-  UserPermissionMapping
+  UserPermissionMapping,
+  JobAdvanceAdjustment,
 } from "./index.js";
 import Role from "./system-identites-domain/roles.js";
 
@@ -101,6 +102,7 @@ Admins.hasMany(Document, { foreignKey: "created_by", as: "documents" });
 =========================== */
 
 // Party ↔ Address
+// Party ↔ Address
 Party.hasMany(PartyAddress, {
   foreignKey: "party_id",
   as: "addresses",
@@ -110,8 +112,9 @@ Party.hasMany(PartyAddress, {
 
 PartyAddress.belongsTo(Party, {
   foreignKey: "party_id",
-  as: "party",
+  as: "partyAddressParent",
 });
+
 
 // Party ↔ GST
 Party.hasMany(PartyGst, {
@@ -123,10 +126,11 @@ Party.hasMany(PartyGst, {
 
 PartyGst.belongsTo(Party, {
   foreignKey: "party_id",
-  as: "party",
+  as: "partyGstParent",
 });
 
-// Party ↔ RateContact
+
+// Party ↔ RateContract
 Party.hasMany(RateContract, {
   foreignKey: "party_id",
   as: "rateContracts",
@@ -136,9 +140,8 @@ Party.hasMany(RateContract, {
 
 RateContract.belongsTo(Party, {
   foreignKey: "party_id",
-  as: "party",
+  as: "partyRateContractParent",
 });
-
 /* ===========================
    OPERATIONAL DOMAIN
 =========================== */
@@ -267,8 +270,24 @@ Trips.belongsTo(Jobs, { foreignKey: "job_id", as: "job" });
 Jobs.hasMany(Trips, { foreignKey: "job_id", as: "trips" });
 Jobs.hasMany(PartyAdvance, {
   foreignKey: "job_id",
-  as: "advances",
+  as: "party_advances",
 });
+
+PartyAdvance.belongsTo(Jobs, {
+  foreignKey: "job_id",
+  as: "job",
+});
+
+Jobs.hasMany(JobAdvanceAdjustment, {
+  foreignKey: "job_id",
+  as: "advance_adjustments",
+});
+
+JobAdvanceAdjustment.belongsTo(Jobs, {
+  foreignKey: "job_id",
+  as: "job",
+});
+
 
 Jobs.belongsTo(Admins, {
   foreignKey: "created_by_admin_id",
@@ -543,16 +562,6 @@ RateContract.belongsTo(Party, {
   as: "party",
 });
 
-Party.hasMany(RateContract, {
-  foreignKey: "party_id",
-  as: "rateContracts",
-});
-
-
-RateContract.belongsTo(Route, {
-  foreignKey: "route_id",
-  as: "route",
-});
 
 Route.hasMany(RateContract, {
   foreignKey: "route_id",
