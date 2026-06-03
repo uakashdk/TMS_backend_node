@@ -150,6 +150,7 @@ export const getRouteDropdown = async (req, res) => {
       data: routes,
     });
   } catch (error) {
+       console.log("Error fetching route dropdown data:", error);
     return res.status(500).json({
       success: false,
       message: "Failed to fetch route dropdown data",

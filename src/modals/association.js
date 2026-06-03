@@ -559,6 +559,10 @@ RateContract.belongsTo(Party, {
   as: "party",
 });
 
+RateContract.belongsTo(Route, {
+  foreignKey: "route_id",
+  as: "route",
+});
 
 Route.hasMany(RateContract, {
   foreignKey: "route_id",

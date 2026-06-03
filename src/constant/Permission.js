@@ -89,5 +89,11 @@ export const Permission = {
         View:"view_role",
         DeleteRole:"delete_role",
         UpdateRole:"update_role"
-     }
+     },
+     RATE_CONTRACT:{
+        CreateRateContract:"create_rate_contract",
+        ViewRateContract:"view_rate_contract",
+        UpdateRateContract:"update_rate_contract",
+        DeactivateRateContract:"deactivate_rate_contract"
+     },
 };

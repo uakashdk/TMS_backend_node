@@ -1,7 +1,7 @@
 import { DataTypes, Model } from "sequelize";
 import { sequelize } from "../../Config/Db.js";
 
-class Job extends Model {}
+class Job extends Model { }
 
 Job.init(
   {
@@ -119,6 +119,10 @@ Job.init(
     // ==========================
 
     commercial_snapshot: {
+      type: DataTypes.JSON,
+      allowNull: true,
+    },
+    rate_contract_snapshot: {
       type: DataTypes.JSON,
       allowNull: true,
     },

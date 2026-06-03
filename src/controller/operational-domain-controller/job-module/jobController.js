@@ -1,4 +1,4 @@
-import { Jobs, Party, Route, Trips } from "../../../modals/index.js";
+import { Jobs, Party, Route, Trips, RateContract } from "../../../modals/index.js";
 import { Op } from "sequelize";
 import { sequelize } from "../../../Config/Db.js";
 
@@ -20,11 +20,6 @@ export const createJob = async (req, res) => {
       route_id,
       is_party_advance_required = false,
       rate_contract_id,
-      rate_type,
-      rate_value,
-      freight_amount,
-      freight_basis_value,
-      commercial_snapshot,
     } = req.body;
 
     // =========================
@@ -50,7 +45,52 @@ export const createJob = async (req, res) => {
     }
 
     // =========================
-    // Duplicate Check
+    // Validate Route
+    // =========================
+
+    const route = await Route.findOne({
+      where: {
+        id: route_id,
+        company_id: companyId,
+      },
+      transaction: t,
+    });
+
+    if (!route) {
+      await t.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Route not found",
+      });
+    }
+
+    // =========================
+    // Validate Rate Contract
+    // =========================
+
+    const rateContract = await RateContract.findOne({
+      where: {
+        id: rate_contract_id,
+        company_id: companyId,
+        party_id: customer_id,
+        route_id,
+        is_active: true,
+      },
+      transaction: t,
+    });
+
+    if (!rateContract) {
+      await t.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Valid rate contract not found",
+      });
+    }
+
+    // =========================
+    // Duplicate Job Check
     // =========================
 
     const existingJob = await Jobs.findOne({
@@ -75,6 +115,61 @@ export const createJob = async (req, res) => {
     }
 
     // =========================
+    // Freight Calculation
+    // =========================
+
+    let freightAmount = 0;
+    let freightBasisValue = null;
+
+    switch (rateContract.freight_basis) {
+      case "PER_TRIP":
+        freightAmount = Number(rateContract.rate);
+        break;
+
+      case "PER_TON":
+        freightBasisValue = Number(goods_quantity);
+        freightAmount =
+          Number(goods_quantity) *
+          Number(rateContract.rate);
+        break;
+
+      case "PER_KM":
+        freightBasisValue = Number(route.distance_km);
+        freightAmount =
+          Number(route.distance_km) *
+          Number(rateContract.rate);
+        break;
+
+      case "FIXED":
+        freightAmount = Number(rateContract.rate);
+        break;
+
+      default:
+        freightAmount = 0;
+    }
+
+    // =========================
+    // Snapshot Creation
+    // =========================
+
+    const commercialSnapshot = {
+      contract_id: rateContract.id,
+      contract_rate: rateContract.rate,
+      freight_basis: rateContract.freight_basis,
+      effective_from: rateContract.effective_from,
+      effective_to: rateContract.effective_to,
+
+      customer_name: customer.party_name,
+
+      route_name: route.route_name,
+      route_distance_km: route.distance_km,
+
+      calculated_freight: freightAmount,
+
+      snapshot_created_at: new Date(),
+    };
+
+    // =========================
     // Create Job
     // =========================
 
@@ -96,20 +191,20 @@ export const createJob = async (req, res) => {
 
         route_id,
 
+        rate_contract_id: rateContract.id,
+
+        rate_type: rateContract.freight_basis,
+        rate_value: rateContract.rate,
+
+        freight_amount: freightAmount,
+        freight_basis_value: freightBasisValue,
+
+        commercial_snapshot: commercialSnapshot,
+
         is_party_advance_required:
           Boolean(is_party_advance_required),
 
-        // Always false at creation
         is_party_advance_received: false,
-
-        rate_contract_id,
-        rate_type,
-        rate_value,
-
-        freight_amount,
-        freight_basis_value,
-
-        commercial_snapshot,
 
         jobs_status: "PENDING",
 
@@ -137,7 +232,6 @@ export const createJob = async (req, res) => {
     });
   }
 };
-
 export const getAllJobs = async (req, res) => {
   try {
     const companyId = req.user.companyId;
@@ -303,13 +397,14 @@ export const getJobById = async (req, res) => {
           as: "trips",
           attributes: [
             "id",
-            "trip_number",
             "trip_status",
             "trip_start_date",
-            "trip_end_date",
+            "expected_delivery_date",
+            "started_at",
+            "completed_at",
           ],
           required: false,
-        },
+        }
       ],
     });
 

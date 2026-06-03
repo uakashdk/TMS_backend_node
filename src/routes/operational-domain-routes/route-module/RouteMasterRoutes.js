@@ -14,12 +14,14 @@ import { createRouteSchema, updateRouteSchema } from "../../../validation/operat
 import { ROLES } from "../../../constant/roles.js";
 import requireRole from "../../../middleware/requireRole.js";
 import verifyAccessToken from "../../../middleware/verifyAccessToken.js";
+import { Permission } from "../../../constant/Permission.js";
+import { requirePermission } from "../../../middleware/requirePermission.js";
 
 const router = express.Router();
 router.post(
   "/create-route",
   verifyAccessToken,
-  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER]),
+  requirePermission(Permission.ROUTE.CreateRoute),
   validateRequest(createRouteSchema),
   createRoute
 );
@@ -27,43 +29,43 @@ router.post(
 router.get(
   "/get-all-routes",
   verifyAccessToken,
-  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
+  requirePermission(Permission.ROUTE.View),
   getAllRoutes
 );
 
 router.get(
   "/get-route-dropdown",
   verifyAccessToken,
-  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
+  requirePermission(Permission.ROUTE.View),
   getRouteDropdown
 );
 
 router.get(
   "/get-route-by-id/:id",
   verifyAccessToken,
-  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
+  requirePermission(Permission.ROUTE.View),
   getRouteById
 );
 
 router.put(
   "/update-route/:id",
-  verifyAccessToken,    
-    requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER]),
-    validateRequest(updateRouteSchema),
-    updateRoute
+  verifyAccessToken,
+  requirePermission(Permission.ROUTE.UpdateRoute),
+  validateRequest(updateRouteSchema),
+  updateRoute
 );
 
 router.delete(
   "/delete-route/:id",
   verifyAccessToken,
-  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER]),
+  requirePermission(Permission.ROUTE.DeleteRoute),
   deleteRoute
 );
 
 router.get(
   "/get-all-states",
   verifyAccessToken,
-  requireRole([ROLES.COMPANY_ADMIN, ROLES.OPERATIONAL_MANAGER, ROLES.DRIVER]),
+  requirePermission(Permission.ROUTE.View),
   getAllState
 );
 

@@ -12,14 +12,14 @@ const router = express.Router();
 
 router.post("/create-vehicle-assignment",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.AssignDriverToVehicle),validateRequest(assignDriverToVehicleSchema),assignDriverToVehicle);
 
-router.post("/unassign-vehicle-assignment",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.AssignDriverToVehicle),validateRequest(unassignDriverFromVehicleSchema),unassignDriverFromVehicle);
+router.post("/unassign-vehicle-assignment",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.UnassignDriverFromVehicle),validateRequest(unassignDriverFromVehicleSchema),unassignDriverFromVehicle);
 
-router.get("/get-current-vehicle-ofADriver/:driverId",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),validateRequest(getCurrentVehicleOfDriverSchema),getCurrentVehicleOfDriver);
+router.get("/get-current-vehicle-ofADriver/:driverId",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.ViewCurrentDriverToVehicle),validateRequest(getCurrentVehicleOfDriverSchema),getCurrentVehicleOfDriver);
 
-router.get("/drivers/:driverId/availability",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),validateRequest(getActiveVehicleDriverMappingSchema),checkDriverAvailability);
+router.get("/drivers/:driverId/availability",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.CheckDriverAvailability),validateRequest(getActiveVehicleDriverMappingSchema),checkDriverAvailability);
 
-router.get("/vehicle/:vehicleId/assigned-drivers",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),getAssignedDriversByVehicle);
+router.get("/vehicle/:vehicleId/assigned-drivers",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.ViewVehicleToDriver),getAssignedDriversByVehicle);
 
-router.get("/assignment-history/:vehicleId",verifyAccessToken,requireRole([ROLES.COMPANY_ADMIN,ROLES.OPERATIONAL_MANAGER]),validateRequest(vehicleAssignmentHistorySchema),getVehicleDriverAssignmentHistory);
+router.get("/assignment-history/:vehicleId",verifyAccessToken,requirePermission(Permission.VEHICLEDRIVERASSIGN.ViewAssignmentHistory),validateRequest(vehicleAssignmentHistorySchema),getVehicleDriverAssignmentHistory);
 
 export default router;
