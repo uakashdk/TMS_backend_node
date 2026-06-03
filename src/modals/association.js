@@ -273,10 +273,7 @@ Jobs.hasMany(PartyAdvance, {
   as: "party_advances",
 });
 
-PartyAdvance.belongsTo(Jobs, {
-  foreignKey: "job_id",
-  as: "job",
-});
+
 
 Jobs.hasMany(JobAdvanceAdjustment, {
   foreignKey: "job_id",

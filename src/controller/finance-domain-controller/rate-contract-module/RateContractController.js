@@ -1,5 +1,5 @@
 import { RateContract } from "../../../modals/index.js";
-import {sequelize} from "../../../Config/Db.js";
+import { sequelize } from "../../../Config/Db.js";
 import { Op } from "sequelize";
 
 export const createRateContract = async (req, res) => {
@@ -14,6 +14,23 @@ export const createRateContract = async (req, res) => {
       effective_from,
       effective_to,
     } = req.body;
+
+
+    const existingContract = await RateContract.findOne({
+      where: {
+        company_id: req.user.companyId,
+        party_id,
+        route_id,
+        is_active: true
+      }
+    });
+
+    if(existingContract) {
+       return res.status(400).json({
+         success:false,
+         message:"rate already active",
+    })
+    }
 
     const newRateContract = await RateContract.create(
       {
@@ -67,7 +84,7 @@ export const getAllRateContracts = async (req, res) => {
 
     const whereCondition = {
       company_id: req.user.companyId,
-      is_active:true
+      is_active: true
     };
 
     // Filter by party

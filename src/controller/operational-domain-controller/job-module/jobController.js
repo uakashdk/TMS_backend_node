@@ -4,6 +4,7 @@ import { sequelize } from "../../../Config/Db.js";
 
 export const createJob = async (req, res) => {
   const t = await sequelize.transaction();
+
   try {
     const companyId = req.user.companyId;
     const adminId = req.user.userId;
@@ -17,61 +18,107 @@ export const createJob = async (req, res) => {
       pickup_location,
       dropoff_location,
       route_id,
-      is_party_advance_required,
+      is_party_advance_required = false,
       rate_contract_id,
       rate_type,
       rate_value,
       freight_amount,
       freight_basis_value,
-      commercial_snapshot
+      commercial_snapshot,
     } = req.body;
 
+    // =========================
+    // Validate Customer
+    // =========================
 
-    let advanceRequired = Boolean(is_party_advance_required);
-      const advanceReceived = !advanceRequired;// Always false at creation
+    const customer = await Party.findOne({
+      where: {
+        id: customer_id,
+        company_id: companyId,
+        is_active: true,
+      },
+      transaction: t,
+    });
+
+    if (!customer) {
+      await t.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Customer not found",
+      });
+    }
+
+    // =========================
+    // Duplicate Check
+    // =========================
+
     const existingJob = await Jobs.findOne({
       where: {
         company_id: companyId,
         customer_id,
         job_date,
         pickup_location,
-        dropoff_location
+        dropoff_location,
+        status: true,
       },
-      transaction: t
+      transaction: t,
     });
 
     if (existingJob) {
       await t.rollback();
+
       return res.status(409).json({
         success: false,
-        message: "Job already exists"
+        message: "Similar job already exists",
       });
     }
-    const newJob = await Jobs.create(
+
+    // =========================
+    // Create Job
+    // =========================
+
+    const job = await Jobs.create(
       {
         company_id: companyId,
         customer_id,
+
         created_by_admin_id: adminId,
+
         job_date,
+
         goods_type,
         goods_quantity,
         quantity_units,
+
         pickup_location,
         dropoff_location,
+
         route_id,
-        is_party_advance_required: advanceRequired,
-        is_party_advance_received: advanceReceived,
+
+        is_party_advance_required:
+          Boolean(is_party_advance_required),
+
+        // Always false at creation
+        is_party_advance_received: false,
+
         rate_contract_id,
         rate_type,
         rate_value,
+
         freight_amount,
         freight_basis_value,
+
         commercial_snapshot,
+
+        jobs_status: "PENDING",
+
         created_by: adminId,
         updated_by: adminId,
-
       },
-      { transaction: t }
+      {
+        transaction: t,
+      }
     );
 
     await t.commit();
@@ -79,15 +126,14 @@ export const createJob = async (req, res) => {
     return res.status(201).json({
       success: true,
       message: "Job created successfully",
-      data: newJob
+      data: job,
     });
-
   } catch (error) {
     await t.rollback();
-    console.log("error,",error?.message);
+
     return res.status(500).json({
       success: false,
-      message: error.message
+      message: error.message,
     });
   }
 };
@@ -101,44 +147,96 @@ export const getAllJobs = async (req, res) => {
       limit = 10,
       search = "",
       customer_id,
-      location
+      location,
+      jobs_status,
+      is_party_advance_required,
+      is_party_advance_received
     } = req.query;
 
     const offset = (page - 1) * limit;
 
     const whereCondition = {
       company_id: companyId,
+      status: true,
     };
 
-    // Search by goods_type (job name equivalent)
     if (search) {
-      whereCondition.goods_type = {
-        [Op.like]: `%${search}%`,
-      };
+      whereCondition[Op.or] = [
+        {
+          goods_type: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        {
+          pickup_location: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        {
+          dropoff_location: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+      ];
     }
 
-    // Search by customer_id
     if (customer_id) {
       whereCondition.customer_id = customer_id;
     }
 
-    // Search by pickup or dropoff location
     if (location) {
       whereCondition[Op.or] = [
-        { pickup_location: { [Op.like]: `%${location}%` } },
-        { dropoff_location: { [Op.like]: `%${location}%` } },
+        {
+          pickup_location: {
+            [Op.like]: `%${location}%`,
+          },
+        },
+        {
+          dropoff_location: {
+            [Op.like]: `%${location}%`,
+          },
+        },
       ];
+    }
+
+    if (jobs_status) {
+      whereCondition.jobs_status = jobs_status;
+    }
+
+    if (is_party_advance_required !== undefined) {
+      whereCondition.is_party_advance_required =
+        is_party_advance_required === "true";
+    }
+
+    if (is_party_advance_received !== undefined) {
+      whereCondition.is_party_advance_received =
+        is_party_advance_received === "true";
     }
 
     const { rows, count } = await Jobs.findAndCountAll({
       where: whereCondition,
+
       include: [
         {
           model: Party,
           as: "customer",
-          attributes: ["id", "party_name"],
+          attributes: [
+            "id",
+            "party_name",
+            "phone_number",
+          ],
+        },
+        {
+          model: Route,
+          as: "route",
+          attributes: [
+            "id",
+            "route_name",
+          ],
+          required: false,
         },
       ],
+
       order: [["created_at", "DESC"]],
       limit: Number(limit),
       offset: Number(offset),
@@ -154,7 +252,8 @@ export const getAllJobs = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log("error=======>",error);
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -172,17 +271,44 @@ export const getJobById = async (req, res) => {
       where: {
         id,
         company_id: companyId,
+        status: true,
       },
+
       include: [
         {
           model: Party,
           as: "customer",
-          attributes: ["id", "party_name", "phone_number"],
+          attributes: [
+            "id",
+            "party_name",
+            "contact_person",
+            "phone_number",
+            "email",
+          ],
         },
+
+        {
+          model: Route,
+          as: "route",
+          attributes: [
+            "id",
+            "route_name",
+            "distance_km",
+          ],
+          required: false,
+        },
+
         {
           model: Trips,
           as: "trips",
-          attributes: ["id", "trip_status", "trip_start_date"],
+          attributes: [
+            "id",
+            "trip_number",
+            "trip_status",
+            "trip_start_date",
+            "trip_end_date",
+          ],
+          required: false,
         },
       ],
     });
@@ -196,9 +322,49 @@ export const getJobById = async (req, res) => {
 
     return res.status(200).json({
       success: true,
-      data: job,
+      data: {
+        id: job.id,
+
+        customer: job.customer,
+
+        route: job.route,
+
+        job_date: job.job_date,
+
+        goods_type: job.goods_type,
+        goods_quantity: job.goods_quantity,
+        quantity_units: job.quantity_units,
+
+        pickup_location: job.pickup_location,
+        dropoff_location: job.dropoff_location,
+
+        rate_contract_id: job.rate_contract_id,
+        rate_type: job.rate_type,
+        rate_value: job.rate_value,
+
+        freight_amount: job.freight_amount,
+        freight_basis_value: job.freight_basis_value,
+
+        is_party_advance_required:
+          job.is_party_advance_required,
+
+        is_party_advance_received:
+          job.is_party_advance_received,
+
+        jobs_status: job.jobs_status,
+
+        commercial_snapshot:
+          job.commercial_snapshot,
+
+        trips: job.trips,
+
+        created_at: job.created_at,
+        updated_at: job.updated_at,
+      },
     });
   } catch (error) {
+    console.log(error);
+
     return res.status(500).json({
       success: false,
       message: error.message,
@@ -214,39 +380,67 @@ export const getJobsDropdown = async (req, res) => {
 
     const whereCondition = {
       company_id: companyId,
-      //   jobs_status: "PENDING", // only jobs without trip
+      status: true,
+      jobs_status: {
+        [Op.notIn]: ["COMPLETED", "CANCELLED"],
+      },
     };
 
     if (search) {
       whereCondition[Op.or] = [
-        { goods_type: { [Op.like]: `%${search}%` } },
-        { pickup_location: { [Op.like]: `%${search}%` } },
-        { dropoff_location: { [Op.like]: `%${search}%` } },
+        {
+          goods_type: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        {
+          pickup_location: {
+            [Op.like]: `%${search}%`,
+          },
+        },
+        {
+          dropoff_location: {
+            [Op.like]: `%${search}%`,
+          },
+        },
       ];
     }
 
     const jobs = await Jobs.findAll({
       where: whereCondition,
+
       attributes: [
         "id",
+        "job_date",
         "goods_type",
         "pickup_location",
         "dropoff_location",
-        "job_date",
+        "freight_amount",
+        "jobs_status",
       ],
+
       include: [
         {
           model: Party,
           as: "customer",
-          attributes: ["id", "party_name"],
+          attributes: [
+            "id",
+            "party_name",
+          ],
         },
         {
           model: Route,
           as: "route",
-          attributes: ["id", "route_name"]
-        }
+          attributes: [
+            "id",
+            "route_name",
+          ],
+          required: false,
+        },
       ],
-      order: [["job_date", "ASC"]],
+
+      order: [["job_date", "DESC"]],
+
       limit: 20,
     });
 
@@ -266,12 +460,33 @@ export const getJobsDropdown = async (req, res) => {
 
 export const updateJob = async (req, res) => {
   const t = await sequelize.transaction();
+
   try {
     const companyId = req.user.companyId;
-    const jobId = req.params.id;
+    const adminId = req.user.userId;
+
+    const { id } = req.params;
+
+    const job = await Jobs.findOne({
+      where: {
+        id,
+        company_id: companyId,
+        status: true,
+      },
+      transaction: t,
+    });
+
+    if (!job) {
+      await t.rollback();
+
+      return res.status(404).json({
+        success: false,
+        message: "Job not found",
+      });
+    }
 
     const {
-      status,
+      customer_id,
       job_date,
       goods_type,
       goods_quantity,
@@ -279,27 +494,52 @@ export const updateJob = async (req, res) => {
       pickup_location,
       dropoff_location,
       route_id,
-      is_party_advance_required
+
+      rate_contract_id,
+      rate_type,
+      rate_value,
+
+      freight_amount,
+      freight_basis_value,
+
+      commercial_snapshot,
+
+      is_party_advance_required,
+
+      status,
     } = req.body;
 
-    const job = await Jobs.findOne({
-      where: {
-        id: jobId,
-        company_id: companyId,
-      },
-      transaction: t,
-    });
+    const updatePayload = {
+      customer_id,
+      job_date,
 
-    if (!job) {
-      await t.rollback();
-      return res.status(404).json({
-        success: false,
-        message: "Job not found",
-      });
+      goods_type,
+      goods_quantity,
+      quantity_units,
+
+      pickup_location,
+      dropoff_location,
+
+      route_id,
+
+      rate_contract_id,
+      rate_type,
+      rate_value,
+
+      freight_amount,
+      freight_basis_value,
+
+      commercial_snapshot,
+
+      updated_by: adminId,
+    };
+
+    if (typeof is_party_advance_required === "boolean") {
+      updatePayload.is_party_advance_required =
+        is_party_advance_required;
     }
 
-
-    if (status !== undefined) {
+    if (typeof status === "boolean") {
       updatePayload.status = status;
 
       if (status === false) {
@@ -307,38 +547,20 @@ export const updateJob = async (req, res) => {
       }
     }
 
-
-    const updatePayload = {
-      status,
-      job_date,
-      goods_type,
-      goods_quantity,
-      quantity_units,
-      pickup_location,
-      dropoff_location,
-      route_id
-    };
-
-    // 🔑 Core business rule
-    if (status === 0) {
-      updatePayload.jobs_status = "CANCELLED";
-    }
-
-    if (is_party_advance_required === false) {
-      updatePayload.is_party_advance_received = false;
-    }
-
-
-    await job.update(updatePayload, { transaction: t });
+    await job.update(updatePayload, {
+      transaction: t,
+    });
 
     await t.commit();
+
     return res.status(200).json({
       success: true,
       message: "Job updated successfully",
+      data: job,
     });
-
   } catch (error) {
     await t.rollback();
+
     return res.status(500).json({
       success: false,
       message: error.message,

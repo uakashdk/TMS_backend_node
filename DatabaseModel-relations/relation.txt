@@ -1,0 +1,199 @@
+SUPPORT MANAGER
+    ↓
+Create Party
+    ↓
+Party Type
+    ├── Client
+    ├── Consignor
+    ├── Consignee
+    ├── Broker
+    └── Vendor
+    ↓
+Define Financial Rules
+    ├── Credit Limit
+    ├── Credit Days
+    ├── Advance Mandatory?
+    └── Risk Category
+
+==============================JOB RELATION=======================================
+
+    CLIENT REQUESTS JOB
+    ↓
+SUPPORT MANAGER CREATES JOB
+    ↓
+Job Status = PENDING
+    ↓
+Check Client Policy
+    ├── New Client?
+    ├── Advance Mandatory?
+    ├── Outstanding Exists?
+    └── Credit Limit Crossed?
+
+    Client sends advance for JOB-101
+    ↓
+Support creates job
+    ↓
+Support creates advance entry
+    ↓
+PARTY_ADVANCES
+    ├── job_id = JOB-101
+    ├── advance_type = JOB_ADVANCE
+    └── status = OPEN
+    ↓
+PAYMENT SNAP CREATED
+    ↓
+Accounts verifies payment
+    ↓
+Payment Verified?
+    ├── YES
+    │      ↓
+    │  is_verified = true
+    │      ↓
+    │  Job Status = TRIP_CREATED
+    │
+    └── NO
+           ↓
+       Job remains blocked
+
+=================================JOB ADVANCE================================================
+
+Client sends advance for JOB-101
+    ↓
+Support creates job
+    ↓
+Support creates advance entry
+    ↓
+PARTY_ADVANCES
+    ├── job_id = JOB-101
+    ├── advance_type = JOB_ADVANCE
+    └── status = OPEN
+    ↓
+PAYMENT SNAP CREATED
+    ↓
+Accounts verifies payment
+    ↓
+Payment Verified?
+    ├── YES
+    │      ↓
+    │  is_verified = true
+    │      ↓
+    │  Job Status = TRIP_CREATED
+    │
+    └── NO
+           ↓
+       Job remains blocked
+
+=====================ON ACCOUNT ADVANCE====================================
+
+Client deposits ₹5 lakh
+    ↓
+Accounts creates PARTY_ADVANCE
+    ↓
+advance_type = ON_ACCOUNT
+job_id = NULL
+    ↓
+PAYMENT SNAP CREATED
+    ↓
+Advance Balance = ₹5 lakh
+    ↓
+Future Jobs Created
+    ↓
+Adjustments Performed
+    ↓
+JOB_ADVANCE_ADJUSTMENTS
+    ├── JOB-201 → ₹80,000
+    ├── JOB-202 → ₹1,20,000
+    └── JOB-203 → ₹50,000
+    ↓
+Advance balance updated
+
+============================JOB BILLING FLOW==========================
+
+Trip Completed
+    ↓
+POD Received
+    ↓
+Invoice Generated
+    ↓
+Billing Amount Calculated
+    ↓
+Check Advance Used
+    ↓
+Outstanding Calculated
+    ↓
+Payment Pending
+    ↓
+Client Payment Received
+    ↓
+PAYMENT SNAP CREATED
+    ↓
+Bill Closed
+
+===================PAYMENT VERIFICATION FLOW===========================
+
+Payment Entry Created
+    ↓
+Accounts checks:
+    ├── UTR
+    ├── Bank Statement
+    ├── Screenshot
+    ├── Amount
+    └── Party Ledger
+    ↓
+Verified?
+    ├── YES
+    │     ↓
+    │  verified_by
+    │  verified_at
+    │  is_verified = true
+    │
+    └── NO
+          ↓
+       Mark suspicious / pending
+
+=============================COMPLETE RELATION=========================
+
+PARTY
+   │
+   ├── hasMany JOBS
+   │
+   ├── hasMany PARTY_ADVANCES
+   │
+   └── hasMany PAYMENT_SNAPS
+
+
+JOB
+   │
+   ├── belongsTo PARTY
+   │
+   ├── hasMany JOB_ADVANCE_ADJUSTMENTS
+   │
+   ├── belongsToMany PARTY_ADVANCES
+   │
+   └── hasMany PAYMENT_SNAPS
+
+
+PARTY_ADVANCE
+   │
+   ├── belongsTo PARTY
+   │
+   ├── optionally belongsTo JOB
+   │
+   ├── hasMany JOB_ADVANCE_ADJUSTMENTS
+   │
+   └── hasMany PAYMENT_SNAPS
+
+
+JOB_ADVANCE_ADJUSTMENT
+   │
+   ├── belongsTo JOB
+   │
+   └── belongsTo PARTY_ADVANCE
+
+
+PAYMENT_SNAP
+   │
+   ├── polymorphic relation
+   │
+   ├── entity_type
+   └── entity_id
